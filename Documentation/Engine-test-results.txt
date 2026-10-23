@@ -41,4 +41,3 @@ PASS removing task preserves downloaded files
 PASS v2-only torrents supported
 ALL 41 CHECKS PASSED; libtorrent 2.1.2.0
 
-EXIT 0

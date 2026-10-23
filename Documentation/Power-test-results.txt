@@ -1,0 +1,37 @@
+PASS disabled option never creates assertion
+PASS non-active state excluded: paused
+PASS non-active state excluded: seeding
+PASS non-active state excluded: error
+PASS non-active state excluded: metadata
+PASS non-active state excluded: ready
+PASS non-active state excluded: downloading
+PASS non-active state excluded: downloading
+PASS non-active state excluded: downloading
+PASS non-active state excluded: downloading
+PASS ignored task states leave host sleep policy untouched
+PASS zero-rate unfinished download acquires assertion
+PASS single assertion held for download
+PASS only system idle sleep assertion type requested
+PASS assertion reason is descriptive and valid
+PASS multiple downloads and repeated ticks do not duplicate assertion
+PASS one completed transfer does not release while another is active
+PASS pausing last download releases assertion once
+PASS repeated idle updates do not release twice
+PASS verification of unfinished download can finish while unattended
+PASS disabling option immediately releases assertion
+PASS quit cleanup releases active assertion
+PASS late refresh after quit cannot reacquire assertion
+PASS quit cleanup is idempotent
+PASS manager deinit releases owned assertion
+PASS failed acquisition never stores invalid assertion
+PASS same acquisition failure is not logged every poll
+PASS acquisition can recover on later update
+PASS failed release retains ownership for retry
+PASS release retries successfully
+PASS success result with null assertion is rejected
+PASS legacy preferences.v1 migration preserves every existing setting
+PASS legacy record receives new sleep default
+PASS partial preferences restore present values and default missing ones
+PASS new disabled setting persists through encode/decode
+PASS empty preference record uses complete defaults
+ALL 36 POWER/PREFERENCES CHECKS PASSED

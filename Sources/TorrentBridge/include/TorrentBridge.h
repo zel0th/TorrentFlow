@@ -15,6 +15,10 @@ char *tf_details_filtered(TFEngine engine, const char *identifier, int include_p
 char *tf_clear_logs(TFEngine engine, const char *identifier);
 char *tf_commit(TFEngine engine, const char *identifier, const char *destination,
                 const int *priorities, int count, int start);
+char *tf_commit_with_names(TFEngine engine, const char *identifier, const char *destination,
+                const int *priorities, int count, int start, const char *json_names);
+char *tf_add_trackers(TFEngine engine, const char *identifier, const char *json_urls);
+char *tf_set_file_priority(TFEngine engine, const char *identifier, int index, int priority);
 char *tf_command(TFEngine engine, const char *identifier, const char *command);
 char *tf_priorities(TFEngine engine, const char *identifier, const int *priorities, int count);
 char *tf_configure(TFEngine engine, const char *json);

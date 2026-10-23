@@ -45,14 +45,26 @@ final class TorrentEngine: @unchecked Sendable {
         let r = try await request { h in source.withCString { tf_stage(h, $0) } }
         guard let id = r.id else { throw EngineFailure(message: "Не получен идентификатор задачи") }; return id
     }
-    func commit(_ id: String, path: String, priorities: [Int32], start: Bool) async throws {
-        _ = try await request { h in id.withCString { identifier in path.withCString { path in priorities.withUnsafeBufferPointer { tf_commit(h, identifier, path, $0.baseAddress, Int32($0.count), start ? 1 : 0) } } } }
+    func commit(_ id: String, path: String, priorities: [Int32], start: Bool, names: [Int: String] = [:]) async throws {
+        let values = Dictionary(uniqueKeysWithValues: names.map { (String($0.key), $0.value) })
+        let json = String(decoding: try JSONEncoder().encode(values), as: UTF8.self)
+        _ = try await request { h in id.withCString { identifier in path.withCString { path in priorities.withUnsafeBufferPointer { priorities in json.withCString { tf_commit_with_names(h, identifier, path, priorities.baseAddress, Int32(priorities.count), start ? 1 : 0, $0) } } } } }
     }
     func command(_ id: String, _ command: String) async throws {
         _ = try await request { h in id.withCString { id in command.withCString { tf_command(h, id, $0) } } }
     }
     func priorities(_ id: String, _ priorities: [Int32]) async throws {
         _ = try await request { h in id.withCString { id in priorities.withUnsafeBufferPointer { tf_priorities(h, id, $0.baseAddress, Int32($0.count)) } } }
+    }
+    func filePriority(_ id: String, index: Int, priority: Int) async throws {
+        guard let index = Int32(exactly: index), let priority = Int32(exactly: priority) else {
+            throw EngineFailure(message: "Некорректный файл или приоритет")
+        }
+        _ = try await request { h in id.withCString { tf_set_file_priority(h, $0, index, priority) } }
+    }
+    func addTrackers(_ id: String, urls: [String]) async throws {
+        let json = String(decoding: try JSONEncoder().encode(urls), as: UTF8.self)
+        _ = try await request { h in id.withCString { id in json.withCString { tf_add_trackers(h, id, $0) } } }
     }
     func configure(_ preferences: Preferences) async throws {
         let json = String(decoding: try JSONEncoder().encode(preferences), as: UTF8.self)

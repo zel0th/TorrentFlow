@@ -120,17 +120,15 @@ struct MainView: View {
 private struct TransferFilterBar: View {
     @ObservedObject var store: AppStore
     var body: some View {
-        GlassEffectContainer(spacing: 8) {
-            HStack(spacing: 6) {
-                ForEach(TransferFilter.allCases) { item in
-                    filterButton(item)
-                }
-                Spacer(minLength: 0)
+        HStack(spacing: 6) {
+            ForEach(TransferFilter.allCases) { item in
+                filterButton(item)
             }
+            Spacer(minLength: 0)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
-        .background(.bar)
+        .background(Color(nsColor: .windowBackgroundColor))
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Фильтры загрузок")
     }
@@ -144,14 +142,14 @@ private struct TransferFilterBar: View {
                 Text("\(count)")
                     .font(.system(size: 13, weight: .medium))
                     .monospacedDigit()
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(selected ? Color(nsColor: .labelColor) : Color(nsColor: .secondaryLabelColor))
             }
             .padding(.horizontal, 13)
             .frame(height: 37)
             .contentShape(Capsule())
         }
         .buttonStyle(.plain)
-        .foregroundStyle(selected ? Color.primary : Color.secondary)
+        .foregroundStyle(Color(nsColor: .labelColor))
         .background {
             if selected {
                 Capsule().fill(FlowStyle.accent.opacity(0.14))

@@ -3,7 +3,6 @@ import AppKit
 
 struct InspectorView: View {
     @ObservedObject var store: AppStore
-    @ViewState private var editingFiles = false
     var body: some View {
         VStack(spacing: 0) {
             header
@@ -11,14 +10,11 @@ struct InspectorView: View {
             panel.frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .background(Color(nsColor: .textBackgroundColor))
-        .sheet(isPresented: $editingFiles) {
-            if let transfer = store.selected { EditFilesView(store: store, transfer: transfer) }
-        }
     }
     private var header: some View {
         HStack(spacing: 18) {
             Text("Инспектор").font(.system(size: 15, weight: .semibold))
-            Picker("Раздел инспектора", selection: $store.inspectorTab) {
+            Picker("Инспектор", selection: $store.inspectorTab) {
                 Text("Обзор").tag(0)
                 Text("Файлы").tag(1)
                 Text("Трекеры").tag(2)
@@ -27,7 +23,7 @@ struct InspectorView: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .accessibilityLabel("Раздел инспектора")
+            .accessibilityLabel("Инспектор")
             .frame(width: 510)
             Spacer(minLength: 8)
             if let transfer = store.selected {
@@ -45,8 +41,8 @@ struct InspectorView: View {
             InspectorLogs(store: store)
         } else if let transfer = store.selected {
             switch store.inspectorTab {
-            case 1: InspectorFiles(transfer: transfer) { editingFiles = true }
-            case 2: InspectorTrackers(transfer: transfer)
+            case 1: InspectorFiles(store: store, transfer: transfer).id(transfer.id)
+            case 2: InspectorTrackers(store: store, transfer: transfer).id(transfer.id)
             case 3: InspectorPeers(peers: store.peers)
             default: InspectorOverview(store: store, transfer: transfer)
             }
@@ -61,30 +57,47 @@ private struct InspectorOverview: View {
     let transfer: Transfer
     var body: some View {
         ScrollView {
-            HStack(alignment: .top, spacing: 24) {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text(transfer.name).font(.system(size: 17, weight: .semibold)).lineLimit(2).textSelection(.enabled)
-                    Text(transfer.status).font(.callout).foregroundStyle(transfer.error.isEmpty ? Color.secondary : Color.orange)
-                    ProgressView(value: transfer.progress).tint(FlowStyle.accent)
-                    Text(transfer.progress, format: .percent.precision(.fractionLength(1))).monospacedDigit().foregroundStyle(.secondary)
-                }.frame(minWidth: 190, maxWidth: 290, alignment: .leading)
-                Divider()
-                Grid(alignment: .leading, horizontalSpacing: 20, verticalSpacing: 10) {
-                    metric("Выбрано", bytes(transfer.wanted))
-                    metric("Загружено", bytes(transfer.done))
-                    metric("Отдано", bytes(transfer.uploaded))
-                    metric("Рейтинг", String(format: "%.2f", transfer.ratio))
-                    metric("Пиры / Сиды", "\(transfer.peers) / \(transfer.seeds)")
-                }.frame(minWidth: 235, alignment: .leading)
-                Divider()
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("Папка загрузки").font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary)
-                    Text(transfer.destination).font(.callout).textSelection(.enabled).lineLimit(2).help(transfer.destination)
-                    Button("Показать в Finder") { store.reveal(transfer) }.controlSize(.small)
-                    Text("Инфохеш").font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary).padding(.top, 2)
-                    Text(transfer.hash).font(.system(size: 11, design: .monospaced)).textSelection(.enabled).lineLimit(2)
-                }.frame(maxWidth: .infinity, alignment: .leading)
-            }.padding(20).frame(maxWidth: .infinity, alignment: .leading)
+            VStack(alignment: .leading, spacing: 16) {
+                summary
+                HStack(alignment: .top, spacing: 24) {
+                    Grid(alignment: .leading, horizontalSpacing: 24, verticalSpacing: 8) {
+                        metric("Выбрано", bytes(transfer.wanted))
+                        metric("Загружено", bytes(transfer.done))
+                        metric("Отдано", bytes(transfer.uploaded))
+                        metric("Рейтинг", String(format: "%.2f", transfer.ratio))
+                        metric("Пиры / Сиды", "\(transfer.peers) / \(transfer.seeds)")
+                    }.frame(minWidth: 250, maxWidth: .infinity, alignment: .leading)
+                    Divider()
+                    location.frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }.padding(18).frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+    private var summary: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline, spacing: 18) {
+                Text(transfer.name).font(.system(size: 17, weight: .semibold)).lineLimit(2).textSelection(.enabled)
+                Spacer(minLength: 10)
+                Text(transfer.status).font(.callout).foregroundStyle(transfer.error.isEmpty ? Color.secondary : Color.orange).lineLimit(2)
+                Text(transfer.progress, format: .percent.precision(.fractionLength(1)))
+                    .font(.system(size: 14, weight: .semibold)).monospacedDigit().fixedSize()
+            }
+            ProgressView(value: transfer.progress).tint(FlowStyle.accent)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(nsColor: .controlBackgroundColor), in: .rect(cornerRadius: 10))
+    }
+    private var location: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Папка загрузки").font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary)
+            HStack(spacing: 12) {
+                Text(transfer.destination).font(.callout).textSelection(.enabled).lineLimit(2).help(transfer.destination)
+                Spacer(minLength: 0)
+                Button("Показать в Finder") { store.reveal(transfer) }.controlSize(.small)
+            }
+            Text("Инфохеш").font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary).padding(.top, 2)
+            Text(transfer.hash).font(.system(size: 11, design: .monospaced)).textSelection(.enabled).lineLimit(2)
         }
     }
     private func metric(_ title: String, _ value: String) -> some View {
@@ -93,16 +106,18 @@ private struct InspectorOverview: View {
 }
 
 private struct InspectorFiles: View {
+    @ObservedObject var store: AppStore
     let transfer: Transfer
-    let edit: () -> Void
+    @ViewState private var pending: Set<Int> = []
+    @ViewState private var displayedPriorities: [Int: Int] = [:]
     private var files: [TorrentFile] { transfer.files.filter(\.selectable) }
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("\(files.count) файлов · \(bytes(transfer.wanted)) выбрано").foregroundStyle(.secondary)
+                Text("\(files.count) файлов · \(bytes(transfer.wanted)) выбрано")
                 Spacer()
-                Button("Выбор и приоритеты…", action: edit).controlSize(.small)
-            }.font(.system(size: 12)).padding(.horizontal, 18).frame(height: 37)
+                Text("Выберите приоритет в строке файла")
+            }.font(.system(size: 12)).foregroundStyle(.secondary).padding(.horizontal, 18).frame(height: 37)
             Table(files) {
                 TableColumn("Файл") { file in Text(file.path).lineLimit(1).truncationMode(.middle).help(file.path) }.width(min: 280, ideal: 560)
                 TableColumn("Размер") { file in Text(bytes(file.size)).monospacedDigit() }.width(110)
@@ -111,28 +126,132 @@ private struct InspectorFiles: View {
                         Text(file.size > 0 ? Double(file.done) / Double(file.size) : 0, format: .percent.precision(.fractionLength(1))).monospacedDigit()
                     } else { Text("—").foregroundStyle(.secondary) }
                 }.width(90)
-                TableColumn("Приоритет") { file in Text(FilePriority(rawValue: file.priority)?.title ?? "Обычный").foregroundStyle(file.priority == 0 ? Color.secondary : Color.primary) }.width(145)
+                TableColumn("Приоритет") { file in priorityPicker(file) }.width(175)
             }
             .tableStyle(.inset(alternatesRowBackgrounds: true))
+        }
+    }
+    private func priorityPicker(_ file: TorrentFile) -> some View {
+        Picker("Приоритет \(file.name)", selection: Binding(
+            get: { displayedPriorities[file.index] ?? file.priority },
+            set: { priority in update(file.index, priority: priority) }
+        )) {
+            ForEach(FilePriority.allCases) { priority in Text(priority.title).tag(priority.rawValue) }
+        }
+        .pickerStyle(.menu).labelsHidden().controlSize(.small)
+        .accessibilityLabel("Приоритет \(file.name)")
+        .disabled(store.busy || pending.contains(file.index))
+    }
+    private func update(_ index: Int, priority: Int) {
+        guard !store.busy, !pending.contains(index) else { return }
+        pending.insert(index); displayedPriorities[index] = priority
+        let id = transfer.id
+        Task {
+            _ = await store.setFilePriority(id, index: index, priority: priority)
+            displayedPriorities.removeValue(forKey: index)
+            pending.remove(index)
         }
     }
 }
 
 private struct InspectorTrackers: View {
+    @ObservedObject var store: AppStore
     let transfer: Transfer
+    @ViewState private var adding = false
     private var trackers: [TrackerRow] { transfer.trackers.map { TrackerRow(id: $0) } }
     var body: some View {
-        Table(trackers) {
-            TableColumn("Адрес трекера") { tracker in Text(tracker.id).textSelection(.enabled).help(tracker.id) }
-        }
-        .tableStyle(.inset(alternatesRowBackgrounds: true))
-        .overlay {
-            if trackers.isEmpty {
-                ContentUnavailableView("Трекеров нет", systemImage: "network", description: Text("Поиск пиров может выполняться через DHT и PEX."))
+        VStack(spacing: 0) {
+            HStack {
+                Text("Трекеров: \(trackers.count)").foregroundStyle(.secondary)
+                Spacer()
+                Button("Добавить трекеры…") { adding = true }.controlSize(.small).disabled(store.busy)
+            }.font(.system(size: 12)).padding(.horizontal, 18).frame(height: 37)
+            Table(trackers) {
+                TableColumn("Адрес трекера") { tracker in Text(tracker.id).textSelection(.enabled).help(tracker.id) }
+            }
+            .tableStyle(.inset(alternatesRowBackgrounds: true))
+            .overlay {
+                if trackers.isEmpty {
+                    ContentUnavailableView("Трекеров нет", systemImage: "network", description: Text("Добавьте адрес трекера или используйте поиск пиров через DHT и PEX."))
+                }
             }
         }
+        .sheet(isPresented: $adding) { AddTrackersView(store: store, transfer: transfer) }
     }
     private struct TrackerRow: Identifiable { let id: String }
+}
+
+private struct AddTrackersView: View {
+    @ObservedObject var store: AppStore
+    let transfer: Transfer
+    @Environment(\.dismiss) private var dismiss
+    @ViewState private var text = ""
+    @ViewState private var submitting = false
+    @ViewState private var submissionError: String?
+    private var lines: [(Int, String)] {
+        text.components(separatedBy: .newlines).enumerated().compactMap { offset, value in
+            let line = value.trimmingCharacters(in: .whitespacesAndNewlines)
+            return line.isEmpty ? nil : (offset + 1, line)
+        }
+    }
+    private var invalidLine: Int? { lines.first { !validTracker($0.1) }?.0 }
+    private var urls: [String] {
+        var seen = Set(transfer.trackers)
+        return lines.compactMap { _, value in seen.insert(value).inserted ? value : nil }
+    }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            PanelTitle(title: "Добавить трекеры", subtitle: transfer.name)
+            Text("Вставьте по одному адресу на строку. Поддерживаются HTTP, HTTPS и UDP.")
+                .font(.callout).foregroundStyle(.secondary)
+            TextEditor(text: $text)
+                .font(.system(size: 13, design: .monospaced))
+                .frame(height: 170)
+                .border(Color(nsColor: .separatorColor))
+                .disabled(submitting)
+                .accessibilityLabel("Адреса трекеров, по одному на строку")
+            validationMessage.frame(height: 32, alignment: .leading)
+            HStack {
+                Spacer()
+                Button("Отмена") { dismiss() }.keyboardShortcut(.cancelAction).disabled(submitting)
+                Button(submitting ? "Добавление…" : "Добавить") { submit() }
+                    .buttonStyle(.glassProminent).keyboardShortcut(.defaultAction)
+                    .disabled(submitting || store.busy || lines.isEmpty || invalidLine != nil || urls.isEmpty)
+            }
+        }.padding(24).frame(width: 680)
+        .interactiveDismissDisabled(submitting)
+        .onChange(of: text) { submissionError = nil }
+    }
+    @ViewBuilder private var validationMessage: some View {
+        if let invalidLine {
+            Text("Некорректный адрес в строке \(invalidLine). Проверьте протокол, имя сервера и порт.").font(.system(size: 12)).foregroundStyle(.orange)
+        } else if let submissionError {
+            Text(submissionError).font(.system(size: 12)).foregroundStyle(.red).lineLimit(2)
+        } else if !lines.isEmpty && urls.isEmpty {
+            Text("Все указанные трекеры уже есть в списке.").font(.system(size: 12)).foregroundStyle(.secondary)
+        } else {
+            Text(urls.isEmpty ? "" : "Будет добавлено адресов: \(urls.count)").font(.system(size: 12)).foregroundStyle(.secondary)
+        }
+    }
+    private func submit() {
+        guard !submitting, !store.busy, invalidLine == nil, !urls.isEmpty else { return }
+        let values = urls; submitting = true; submissionError = nil
+        Task {
+            let success = await store.addTrackers(transfer.id, urls: values)
+            submitting = false
+            if success { dismiss() }
+            else { submissionError = store.editorError ?? "Не удалось добавить трекеры. Повторите попытку." }
+        }
+    }
+    private func validTracker(_ value: String) -> Bool {
+        guard value.rangeOfCharacter(from: .whitespacesAndNewlines) == nil,
+              let components = URLComponents(string: value),
+              let scheme = components.scheme?.lowercased(), ["http", "https", "udp"].contains(scheme),
+              let host = components.host, !host.isEmpty,
+              components.fragment == nil, components.url != nil else { return false }
+        if let port = components.port, !(1...65535).contains(port) { return false }
+        return scheme != "udp" || components.port != nil
+    }
 }
 
 private struct InspectorPeers: View {
@@ -237,17 +356,3 @@ private struct InspectorLogs: View {
     private func levelColor(_ level: String) -> Color { level == "error" ? .red : level == "warning" ? .orange : .secondary }
 }
 
-struct EditFilesView: View {
-    @ObservedObject var store: AppStore
-    let transfer: Transfer
-    @Environment(\.dismiss) private var dismiss
-    @ViewState private var priorities: [Int: Int] = [:]
-    var body: some View {
-        VStack(spacing: 16) {
-            PanelTitle(title: "Файлы и приоритеты", subtitle: transfer.name)
-            ScrollView { LazyVStack { ForEach(FileNode.tree(transfer.files)) { node in FileTreeRow(node: node, priorities: $priorities, depth: 0) } } }
-            HStack { Spacer(); Button("Отмена") { dismiss() }.keyboardShortcut(.cancelAction); Button("Применить") { store.applyPriorities(transfer.id, values: transfer.files.map { Int32(priorities[$0.index] ?? $0.priority) }); dismiss() }.buttonStyle(.glassProminent).keyboardShortcut(.defaultAction).disabled(!priorities.values.contains { $0 > 0 }) }
-        }.padding(24).frame(width: 800, height: 530)
-            .onAppear { priorities = Dictionary(uniqueKeysWithValues: transfer.files.map { ($0.index, $0.priority) }) }
-    }
-}

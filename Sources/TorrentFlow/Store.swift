@@ -7,26 +7,28 @@ import UniformTypeIdentifiers
     static let shared = AppStore()
     @Published var transfers: [Transfer] = []
     @Published var selectedID: String? {
-        didSet { if oldValue != selectedID { peers = []; Task { await refresh() } } }
+        didSet { if oldValue != selectedID { peers = []; logs = []; Task { await refresh() } } }
     }
     @Published var peers: [PeerDetail] = []
     @Published var logs: [LogEntry] = []
     @Published var inspectorTab = 0 {
         didSet { if oldValue != inspectorTab { Task { await refreshDetails() } } }
     }
-    @Published var filter: TransferFilter = .all
-    @Published var search = ""
+    @Published var filter: TransferFilter = .all { didSet { reconcileSelection() } }
+    @Published var search = "" { didSet { reconcileSelection() } }
     @Published var inspector = true {
         didSet { if inspector { Task { await refreshDetails() } } else { peers = [] } }
     }
     @Published var showMagnet = false
     @Published var draftID: String?
     @Published var error: String?
+    @Published var editorError: String?
     @Published var busy = false
     @Published var removeID: String?
     @Published var removeFiles = false
     @Published var preferences: Preferences {
         didSet {
+            updateSleepPrevention()
             if let bytes = try? JSONEncoder().encode(preferences) { UserDefaults.standard.set(bytes, forKey: "preferences.v1") }
             configTask?.cancel()
             configTask = Task { [weak self] in
@@ -40,8 +42,14 @@ import UniformTypeIdentifiers
     private var pollTask: Task<Void, Never>?
     private var configTask: Task<Void, Never>?
     private var queuedDrafts: [String] = []
+    private var advancingDraft = false
     private var importing = false
     private var sources: [String] = []
+    private var refreshing = false
+    private var refreshRequested = false
+    private var refreshWaiters: [CheckedContinuation<Void, Never>] = []
+    private var stopping = false
+    private let sleepPrevention = SleepPreventionController()
     private init() {
         preferences = UserDefaults.standard.data(forKey: "preferences.v1").flatMap { try? JSONDecoder().decode(Preferences.self, from: $0) } ?? Preferences()
         let root: URL
@@ -51,11 +59,15 @@ import UniformTypeIdentifiers
         pollTask = Task { [weak self] in
             guard let self else { return }
             do { try await engine.configure(preferences) } catch { self.error = error.localizedDescription }
-            var tick = 0
+            var lastSave = Date()
             while !Task.isCancelled {
-                await refresh(); tick += 1
-                if tick % 15 == 0 { do { try await engine.save() } catch { self.error = error.localizedDescription } }
-                try? await Task.sleep(for: .seconds(1))
+                await refresh()
+                if Date().timeIntervalSince(lastSave) >= 15 {
+                    do { try await engine.save() } catch { self.error = error.localizedDescription }
+                    lastSave = Date()
+                }
+                let waitingForMetadata = transfers.contains { $0.draft && !$0.hasMetadata }
+                try? await Task.sleep(for: waitingForMetadata ? .milliseconds(250) : .seconds(1))
             }
         }
     }
@@ -65,12 +77,48 @@ import UniformTypeIdentifiers
     var draft: Transfer? { transfers.first { $0.id == draftID } }
     var downloadRate: Int64 { downloads.reduce(0) { $0 + $1.downloadRate } }
     var uploadRate: Int64 { downloads.reduce(0) { $0 + $1.uploadRate } }
+    private func reconcileSelection() {
+        let newID = TransferSelection.resolve(selectedID, visibleIDs: visible.map(\.id))
+        if newID != selectedID { selectedID = newID }
+    }
+    private func updateSleepPrevention() {
+        guard let change = sleepPrevention.update(preventSleep: !stopping && preferences.preventSleepWhileDownloading, transfers: transfers) else { return }
+        let message: String
+        let level: String
+        switch change {
+        case .started: message = "Автоматический сон Mac приостановлен на время загрузки"; level = "info"
+        case .stopped: message = "Обычный режим сна Mac восстановлен"; level = "info"
+        case .failed(let code): message = "Не удалось обновить блокировку сна Mac (IOKit: \(code))"; level = "warning"
+        }
+        Task { await engine.note(message, level: level) }
+    }
     func refresh() async {
-        do {
-            let updated = try await engine.summary(selectedID: selectedID)
-            if updated != transfers { transfers = updated }
-            await refreshDetails()
-        } catch { self.error = error.localizedDescription }
+        guard !stopping else { return }
+        guard !refreshing else {
+            refreshRequested = true
+            await withCheckedContinuation { refreshWaiters.append($0) }
+            return
+        }
+        refreshing = true
+        defer {
+            refreshing = false
+            let waiters = refreshWaiters
+            refreshWaiters.removeAll()
+            for waiter in waiters { waiter.resume() }
+        }
+        repeat {
+            refreshRequested = false
+            let requestedID = selectedID
+            do {
+                let updated = try await engine.summary(selectedID: requestedID)
+                if updated != transfers { transfers = updated }
+                reconcileSelection()
+                updateSleepPrevention()
+                // A newly selected row needs its full files immediately, not on the next poll.
+                if requestedID != selectedID { refreshRequested = true }
+                await refreshDetails()
+            } catch { self.error = error.localizedDescription }
+        } while refreshRequested && !stopping
     }
     func refreshDetails() async {
         guard inspector, inspectorTab == 3 || inspectorTab == 4 else { return }
@@ -104,31 +152,51 @@ import UniformTypeIdentifiers
                 do {
                     let id = try await engine.stage(source)
                     await refresh()
-                    if draftID == nil { draftID = id } else { queuedDrafts.append(id) }
+                    if draftID == nil && !advancingDraft { draftID = id } else { queuedDrafts.append(id) }
                 } catch { self.error = error.localizedDescription }
             }
             importing = false
         }
     }
     func finishDraft(cancel: Bool = false) {
-        guard let id = draftID else { return }
+        guard !advancingDraft, let id = draftID else { return }
+        advancingDraft = true
         Task {
+            defer { advancingDraft = false }
             if cancel { do { try await engine.command(id, "cancel") } catch { self.error = error.localizedDescription; return } }
             draftID = nil
             await refresh()
             if !queuedDrafts.isEmpty { let next = queuedDrafts.removeFirst(); try? await Task.sleep(for: .milliseconds(300)); draftID = next }
         }
     }
-    func commit(path: String, priorities: [Int32], start: Bool) async -> Bool {
-        guard let draftID else { return false }; busy = true; defer { busy = false }
-        do { try await engine.commit(draftID, path: path, priorities: priorities, start: start); selectedID = draftID; finishDraft(); return true }
-        catch { self.error = error.localizedDescription; return false }
+    func commit(path: String, priorities: [Int32], start: Bool, names: [Int: String] = [:]) async -> Bool {
+        guard !busy, let draftID else { return false }; busy = true; defer { busy = false }
+        editorError = nil
+        do { try await engine.commit(draftID, path: path, priorities: priorities, start: start, names: names); selectedID = draftID; finishDraft(); return true }
+        catch { editorError = error.localizedDescription; return false }
     }
     func command(_ id: String, _ command: String) {
         Task { do { try await engine.command(id, command); await refresh() } catch { self.error = error.localizedDescription } }
     }
     func applyPriorities(_ id: String, values: [Int32]) {
         Task { do { try await engine.priorities(id, values); await refresh(); try await engine.save() } catch { self.error = error.localizedDescription } }
+    }
+    func setFilePriority(_ id: String, index: Int, priority: Int) async -> Bool {
+        guard !busy, !stopping else { return false }
+        do {
+            try await engine.filePriority(id, index: index, priority: priority)
+            await refresh()
+            return true
+        } catch { self.error = error.localizedDescription; return false }
+    }
+    func addTrackers(_ id: String, urls: [String]) async -> Bool {
+        guard !busy, !stopping else { return false }
+        editorError = nil
+        do {
+            try await engine.addTrackers(id, urls: urls)
+            await refresh()
+            return true
+        } catch { editorError = error.localizedDescription; return false }
     }
     func remove(_ id: String) {
         guard !busy else { return }
@@ -233,5 +301,10 @@ import UniformTypeIdentifiers
         let urls = transfer.files.filter { $0.priority > 0 && $0.selectable }.map { URL(fileURLWithPath: transfer.destination).appendingPathComponent($0.path) }.filter { FileManager.default.fileExists(atPath: $0.path) }
         if urls.isEmpty { NSWorkspace.shared.open(URL(fileURLWithPath: transfer.destination)) } else { NSWorkspace.shared.activateFileViewerSelecting(urls) }
     }
-    func stop() async { pollTask?.cancel(); configTask?.cancel(); await engine.shutdown() }
+    func stop() async {
+        stopping = true
+        pollTask?.cancel(); configTask?.cancel()
+        sleepPrevention.stop()
+        await engine.shutdown()
+    }
 }

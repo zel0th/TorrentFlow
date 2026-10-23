@@ -1,9 +1,38 @@
 PASS fresh regression directory
 PASS local seeder listens
 PASS downloader starts
+LATENCY fallback_metadata_ms=7
+PASS healthy fallback supplies metadata without waiting for blackhole tracker
+PASS parallel tracker discovery still downloads zero payload
+PASS first tracker really accepted a stalled request
 PASS selected file index resolved from metadata
 PASS torrent control downloads through tracker
 PASS torrent control excludes unwanted file
+PASS magnet without tracker waits for a discovery source
+PASS invalid tracker rejects whole batch
+PASS rejected tracker batch does not partially mutate task
+PASS malformed tracker request rejected
+PASS malformed tracker request rejected
+PASS malformed tracker request rejected
+PASS malformed tracker request rejected
+PASS malformed tracker request rejected
+PASS malformed tracker request rejected
+PASS malformed tracker request rejected
+PASS tracker addition deduplicates URLs
+LATENCY added_tracker_metadata_ms=43
+PASS new tracker begins metadata discovery promptly
+PASS new tracker does not open payload gate
+PASS rapid inline changes preserve both file priorities
+PASS inline priority rejects invalid index
+PASS inline priority rejects unsupported priority
+PASS inline priority preserves at least one selected file
+PASS DHT routing state saved for warm startup
+PASS engine restarts with routing cache
+PASS tracker-added task restored
+PASS added tracker persists after restart
+PASS inline priority changes persist after restart
+PASS DHT cache is loaded at subsequent startup
+PASS deduplication normalizes scheme and restored trackers
 PASS magnet contains tracker but no explicit peer
 PASS tracker-only magnet receives metadata
 PASS metadata discovery downloads zero file payload
@@ -11,6 +40,8 @@ PASS metadata discovery creates no content files
 PASS peer discovered from real HTTP tracker
 PASS log contains actual libtorrent metadata event
 PASS log contains actual tracker peer reply
+PASS two-second file selection delay still downloads zero payload
+PASS file selection delay still creates no payload files
 PASS inspector exposes actual connected tracker-discovered peer
 PASS loopback peer marked as local country
 PASS peer client comes from seeder advertised handshake
@@ -19,11 +50,16 @@ PASS magnet-selected payload matches byte-for-byte
 PASS magnet excluded file remains absent
 PASS magnet writes only to confirmed destination
 PASS magnet handoff preserves selected high priority
+PASS paused-handoff draft delay downloads zero payload
+PASS confirmed paused magnet downloads zero payload
+PASS confirmed paused magnet creates no content files
+PASS delayed paused magnet resumes using cached seed during tracker outage
+PASS resumed magnet payload matches byte-for-byte
+PASS resumed magnet still excludes unwanted file
 PASS second metadata probe starts without payload
 PASS magnet reuses existing valid files without redownloading
 PASS existing destination payload remains byte-identical
 PASS unrelated destination file preserved
 PASS existing destination still excludes unselected file
-ALL 26 TRACKER-DISCOVERY CHECKS PASSED; libtorrent 2.1.2.0
+ALL 61 TRACKER-DISCOVERY CHECKS PASSED; libtorrent 2.1.2.0
 
-EXIT 0

@@ -1,0 +1,37 @@
+{
+  "version": "0.2.1",
+  "macos": "27.0.1",
+  "architecture": "arm64",
+  "signing": "ad-hoc",
+  "notarized": false,
+  "sha256": {
+    "build/TorrentFlow.app/Contents/MacOS/TorrentFlow": "eab2f15c0e8197d246b2ab5eff2a05f6ef30e42d85438d051dbaccba16fe61b8",
+    "build/releases/TorrentFlow-0.2.1-macOS-arm64.zip": "91b52ef871756b3445e2ef08b5c88c67a0f24255f5120313be3ec42b8b707fa3",
+    "Resources/GeoIP.bin": "35cce3e8a91daa4458bdfe547f74e42c29460610aa6901d9445c378b0dfde7cd",
+    "Design/Icon-Master.png": "75038b07871037ff21a4ed0c8267370116c1986f344d01ef6f4f4dfc78a4bf7e",
+    "Design/AppIcon.icns": "c9ec27b86010cb1d2e486af58327692a8c816c2797aec7419ab049f81cb70926"
+  },
+  "source_sha256": {
+    "Sources/TorrentBridge/GeoIP.hpp": "92728b2ba62f7c56301ca96214b0f89050f052b3ff1f10bd7c2d628ece4195cd",
+    "Sources/TorrentBridge/TorrentBridge.mm": "72b0e449a37c06d6e38aba65a39e1ea70a6dca903e2af93b2df1b64573c58d66",
+    "Sources/TorrentBridge/include/TorrentBridge.h": "3ddab938d7d7a9a3e8416f78e895eee58aefa6208f35bcf5a7a491fb329dd146",
+    "Sources/TorrentFlow/AddTransferView.swift": "2f54983b8fa3e59ef4b702a25e1367dfd3716481a3d617ced60f13a155d45f56",
+    "Sources/TorrentFlow/Engine.swift": "ff43e7c673b25c80150356423cab226f0b801071e76167d6bad16bbddc52d4b8",
+    "Sources/TorrentFlow/InspectorView.swift": "7c031dd057d418e45d1340998a56dd5f159fd0295672c8e6d0596cbdefc903f8",
+    "Sources/TorrentFlow/MainView.swift": "8680e552f2f5c6412098def2873cdf4e3a04d719d3ad90597b3c01b991d8431f",
+    "Sources/TorrentFlow/Models.swift": "6237d6afa9544549949aff2453dba544fe52c297cf3f42b3277c2d2cd41c6631",
+    "Sources/TorrentFlow/PerformanceScenario.swift": "51fd438784a5589d72091a7d8b1fd07bebe172f07b939b83b547dadfe6525be1",
+    "Sources/TorrentFlow/PowerManagement.swift": "e6df18aac0b38f49db59fa8a7c31279e98b5b9146c14d7a95014f557102a506c",
+    "Sources/TorrentFlow/SettingsView.swift": "3acaab45f13801217b53518d16f628a516f747be033abf237f7972bf9fd218ec",
+    "Sources/TorrentFlow/Store.swift": "92625c2e96b37c0d4fb207ef440a686f14a7b9dc380ba47be0e958cb730dc38d",
+    "Sources/TorrentFlow/Style.swift": "b06c81e90c1cc8fd0dd596a78b43062c197215c0602f3fc54a374ee3e17ed92d",
+    "Sources/TorrentFlow/TorrentFlowApp.swift": "c56d6009f0c4cc33a4d7b20c19c35cee0d0c4a0e02c3def22c3ec10685727d97",
+    "Sources/TorrentFlow/TransferSelection.swift": "a14d98f98064c17861b9258e9bb8311a9c9a6ce685e43d956c786ed948146f0d"
+  },
+  "validation": {
+    "automated_checks": 283,
+    "sleep_assertions_verified": true,
+    "download_bytes": 268435456,
+    "download_sha256": "bb587de23a7837f7bfb939ddb50cbb030ed9522239309943c389445b79f553c3"
+  }
+}

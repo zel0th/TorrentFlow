@@ -126,6 +126,37 @@ struct Preferences: Codable, Equatable, Sendable {
     var portMapping = true
     var port = 51413
     var requireEncryption = false
+    var preventSleepWhileDownloading = true
+
+    init() {}
+    private enum CodingKeys: String, CodingKey {
+        case downloadPath, startImmediately, appearance, filterFont, confirmRemove
+        case downLimit, upLimit, alternate, altDown, altUp, ratioLimit, connections
+        case dht, lsd, portMapping, port, requireEncryption, preventSleepWhileDownloading
+    }
+    // New settings must not reset existing preferences.v1 records when their key is absent.
+    init(from decoder: Decoder) throws {
+        self.init()
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        downloadPath = try c.decodeIfPresent(String.self, forKey: .downloadPath) ?? downloadPath
+        startImmediately = try c.decodeIfPresent(Bool.self, forKey: .startImmediately) ?? startImmediately
+        appearance = try c.decodeIfPresent(String.self, forKey: .appearance) ?? appearance
+        filterFont = try c.decodeIfPresent(Double.self, forKey: .filterFont) ?? filterFont
+        confirmRemove = try c.decodeIfPresent(Bool.self, forKey: .confirmRemove) ?? confirmRemove
+        downLimit = try c.decodeIfPresent(Int.self, forKey: .downLimit) ?? downLimit
+        upLimit = try c.decodeIfPresent(Int.self, forKey: .upLimit) ?? upLimit
+        alternate = try c.decodeIfPresent(Bool.self, forKey: .alternate) ?? alternate
+        altDown = try c.decodeIfPresent(Int.self, forKey: .altDown) ?? altDown
+        altUp = try c.decodeIfPresent(Int.self, forKey: .altUp) ?? altUp
+        ratioLimit = try c.decodeIfPresent(Double.self, forKey: .ratioLimit) ?? ratioLimit
+        connections = try c.decodeIfPresent(Int.self, forKey: .connections) ?? connections
+        dht = try c.decodeIfPresent(Bool.self, forKey: .dht) ?? dht
+        lsd = try c.decodeIfPresent(Bool.self, forKey: .lsd) ?? lsd
+        portMapping = try c.decodeIfPresent(Bool.self, forKey: .portMapping) ?? portMapping
+        port = try c.decodeIfPresent(Int.self, forKey: .port) ?? port
+        requireEncryption = try c.decodeIfPresent(Bool.self, forKey: .requireEncryption) ?? requireEncryption
+        preventSleepWhileDownloading = try c.decodeIfPresent(Bool.self, forKey: .preventSleepWhileDownloading) ?? preventSleepWhileDownloading
+    }
 }
 struct FileNode: Identifiable {
     var id: String

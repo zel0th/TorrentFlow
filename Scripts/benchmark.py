@@ -18,6 +18,7 @@ import os
 from pathlib import Path
 import platform
 import plistlib
+import re
 import statistics
 import struct
 import shutil
@@ -29,6 +30,7 @@ import time
 
 ROOT = Path(__file__).resolve().parent.parent
 MIB = 1024 * 1024
+SLEEP_ASSERTION_TYPES = ('PreventUserIdleSystemSleep', 'PreventSystemSleep')
 
 class TaskInfo(ctypes.Structure):
     _fields_ = [(name, ctypes.c_uint64) for name in
@@ -125,6 +127,46 @@ def sha256(path):
             result.update(block)
     return result.hexdigest()
 
+def app_metadata(app):
+    """Read the measured build's identity, also accepting its executable path."""
+    bundle = app if app.suffix == '.app' else app.parent.parent.parent
+    info_path = bundle / 'Contents/Info.plist'
+    if bundle.suffix != '.app' or not info_path.is_file():
+        raise ValueError('Supply an app bundle or its Contents/MacOS executable with an Info.plist')
+    with info_path.open('rb') as stream:
+        info = plistlib.load(stream)
+    version = info.get('CFBundleShortVersionString')
+    if not isinstance(version, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._+-]*', version):
+        raise ValueError('Info.plist must contain a filename-safe CFBundleShortVersionString')
+    executable = info.get('CFBundleExecutable')
+    if not isinstance(executable, str) or not executable or Path(executable).name != executable:
+        raise ValueError('Info.plist must contain a valid CFBundleExecutable')
+    return bundle, bundle / 'Contents/MacOS' / executable, version
+
+def sleep_assertion_evidence(output, pid, phase, expected):
+    """Keep only assertions owned by the measured GUI, not other users' apps."""
+    owned_lines = []
+    matches = []
+    for line in output.splitlines():
+        owner = re.match(r'^\s*pid\s+(\d+)\(.*?\):\s+(.*)$', line)
+        if not owner or int(owner.group(1)) != pid:
+            continue
+        owned_lines.append(line.strip())
+        assertion = re.search(r'\]\s+(?:\S+\s+)?(' + '|'.join(SLEEP_ASSERTION_TYPES) + r')\s+named:', owner.group(2))
+        if assertion:
+            matches.append({'type': assertion.group(1), 'line': line.strip()})
+    present = bool(matches)
+    return {'phase': phase, 'pid': pid, 'expected_prevent_system_sleep': expected,
+            'prevent_system_sleep_present': present, 'passed': present == expected,
+            'matching_assertions': matches, 'gui_assertion_lines': owned_lines,
+            'observed_at_utc': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+            'command': ['/usr/bin/pmset', '-g', 'assertions']}
+
+def capture_sleep_assertion(pid, phase, expected):
+    capture = subprocess.run(['/usr/bin/pmset', '-g', 'assertions'], check=True,
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=10)
+    return sleep_assertion_evidence(capture.stdout, pid, phase, expected)
+
 def macho_content_sha256(path):
     """Hash all Mach-O bytes before the embedded signature, normalizing only
     signature-placement fields and __LINKEDIT size bookkeeping changed by codesign.
@@ -164,9 +206,10 @@ def compile_seeder(output):
     subprocess.run(command, check=True)
 
 def markdown(result):
+    version = result['environment']['app_version']
     labels = [('idle', 'Простой, нет задач'), ('active', 'Локальная загрузка, вкладка пиров'),
               ('retained', 'После загрузки, задача на паузе, вкладка логов')]
-    lines = ['# TorrentFlow 0.2.0 — CPU и память', '',
+    lines = ['# TorrentFlow %s — CPU и память' % version, '',
              'Измерен настоящий Release-процесс GUI TorrentFlow, а не отдельный тест движка. '
              'macOS %s, %s; %s. CPU 100%% соответствует одному ядру.' %
              (result['environment']['macos'], result['environment']['machine'], result['environment']['hardware']), '',
@@ -183,10 +226,18 @@ def markdown(result):
               'В каждой фазе учитывается только PID приложения; локальный сид и скрипт измерения — отдельные процессы.',
               '- Передача: %d МиБ, локальный TCP-пир, ограничение класса локальных пиров сида 8 МиБ/с, настоящий magnet с получением метаданных и подтверждением выбора. '
               'Во время активной загрузки открыт нижний инспектор пиров. После завершения задача приостановлена, открыты логи.' % result['fixture']['size_mib'],
-              '- DHT/LSD/UPnP в изолированном тесте выключены. У копии приложения отдельный Bundle ID `com.zel0th.TorrentFlow.Performance`, код и данные Mach-O и ресурсы совпадают с Release. Переподпись меняет встроенную подпись, поэтому полные SHA-256 Release и QA различаются; оба хеша и общий хеш содержимого Mach-O сохранены в JSON. Проверка нормализует только встроенную подпись, её служебные поля и размеры `__LINKEDIT`. Рабочая конфигурация и папки пользователя не менялись. '
-              'Тестовые данные находятся в собственном временном каталоге.',
+              '- DHT/LSD/UPnP в изолированном тесте выключены. У копии приложения уникальный для этого прогона Bundle ID `%s`: настройки прежних QA-запусков не используются. Код и данные Mach-O и ресурсы совпадают с Release. Переподпись меняет встроенную подпись, поэтому полные SHA-256 Release и QA различаются; оба хеша и общий хеш содержимого Mach-O сохранены в JSON. Проверка нормализует только встроенную подпись, её служебные поля и размеры `__LINKEDIT`. Рабочая конфигурация и папки пользователя не менялись. '
+              'Тестовые данные находятся в собственном временном каталоге.' % result['environment']['qa_bundle_identifier'],
               '- Загруженный файл проверен SHA-256: `%s`.' % result['validation']['download_sha256'],
-              '- Полный набор сэмплов и сведения о бинарном файле: `Performance-0.2.0.json`.', '',
+              '- Полный набор сэмплов и сведения о бинарном файле: [%s](%s).' %
+              (result['report_json_file'], result['report_json_file'])]
+    sleep = result.get('sleep_verification', {})
+    if sleep.get('requested'):
+        lines += ['- Предотвращение сна проверено через `/usr/bin/pmset -g assertions` по одному разу перед '
+                  'окном измерения каждой фазы: активная загрузка удерживает системный sleep assertion с PID GUI; '
+                  'в простое и после паузы он отсутствует. Результат: %s. В JSON сохранены типы и исходные строки '
+                  'assertion только этого процесса.' % ('PASS' if sleep['passed'] else 'FAIL')]
+    lines += ['',
               '## Границы результата', '',
               'Это один локальный замер на данном Mac: один торрент и один пир, без интернет-трекеров и VPN. '
               'Он проверяет стоимость интерфейса, обмена данными и инспектора, но не заменяет долговременный нагрузочный тест '
@@ -199,59 +250,75 @@ def main():
     parser.add_argument('--app', type=Path, default=ROOT / 'build/TorrentFlow.app')
     parser.add_argument('--duration', type=float, default=30)
     parser.add_argument('--size-mib', type=int, default=256)
-    parser.add_argument('--output', type=Path, default=ROOT / 'Documentation/Performance-0.2.0.json')
+    parser.add_argument('--output', type=Path, help='Default: Documentation/Performance-<Info.plist version>.json')
     parser.add_argument('--compile-only', action='store_true')
     parser.add_argument('--await-visible', action='store_true', help='Wait for benchmark-visible control file after GUI appears')
     parser.add_argument('--keep-fixture', action='store_true', help='Keep generated payload files after a successful run')
+    parser.add_argument('--verify-sleep', action='store_true', help='Verify GUI sleep prevention at idle, active, and paused phase boundaries with pmset')
     options = parser.parse_args()
     if platform.system() != 'Darwin':
         parser.error('This benchmark requires macOS libproc')
-    binary = options.app / 'Contents/MacOS/TorrentFlow' if options.app.suffix == '.app' else options.app
     seeder_binary = Path(tempfile.gettempdir()) / 'torrentflow-performance-tools/benchmark-seeder'
     compile_seeder(seeder_binary)
     if options.compile_only:
         print(seeder_binary)
         return
+    try:
+        app_bundle, binary, version = app_metadata(options.app)
+    except (ValueError, OSError, plistlib.InvalidFileException) as error:
+        parser.error(str(error))
     if not binary.exists():
         parser.error('Build the final Release app before running the benchmark: ' + str(binary))
-    if options.app.suffix == '.app':
-        with (options.app / 'Contents/Info.plist').open('rb') as stream:
-            version = plistlib.load(stream).get('CFBundleShortVersionString', '')
-        if version != '0.2.0':
-            parser.error('Expected the final 0.2.0 build, found ' + version)
+    if options.output is None:
+        options.output = ROOT / 'Documentation' / ('Performance-%s.json' % version)
     root = Path(tempfile.mkdtemp(prefix='torrentflow-performance-'))
     print('Benchmark root: ' + str(root), flush=True)
     source_binary = binary
-    if options.app.suffix == '.app':
+    source_binary_sha = sha256(source_binary)
+    source_content_hash = macho_content_sha256(source_binary)
+    # A fresh state folder does not isolate UserDefaults.standard. Give each QA
+    # copy its own defaults domain as well (including the sleep-prevention toggle).
+    qa_bundle_identifier = 'com.zel0th.TorrentFlow.Performance.run' + hashlib.sha256(str(root).encode()).hexdigest()[:16]
+    if app_bundle:
         qa_app = root / 'TorrentFlow Performance.app'
         def copy_bytes(source, target):
             shutil.copyfile(source, target)
             os.chmod(target, stat.S_IMODE(os.stat(source).st_mode))
             return target
-        shutil.copytree(options.app, qa_app, copy_function=copy_bytes)
+        shutil.copytree(app_bundle, qa_app, copy_function=copy_bytes)
         subprocess.run(['/usr/bin/xattr', '-cr', str(qa_app)], check=True)
         info_path = qa_app / 'Contents/Info.plist'
         with info_path.open('rb') as stream:
             info = plistlib.load(stream)
-        info['CFBundleIdentifier'] = 'com.zel0th.TorrentFlow.Performance'
+        info['CFBundleIdentifier'] = qa_bundle_identifier
         with info_path.open('wb') as stream:
             plistlib.dump(info, stream, sort_keys=False)
-        binary = qa_app / 'Contents/MacOS/TorrentFlow'
-        if sha256(binary) != sha256(source_binary):
+        binary = qa_app / 'Contents/MacOS' / binary.name
+        if sha256(binary) != source_binary_sha:
             raise RuntimeError('QA executable copy differs before re-signing')
-        source_content_hash = macho_content_sha256(source_binary)
         subprocess.run(['/usr/bin/codesign', '--force', '--sign', '-', str(qa_app)], check=True)
         subprocess.run(['/usr/bin/codesign', '--verify', '--deep', '--strict', str(qa_app)], check=True)
-        binary = qa_app / 'Contents/MacOS/TorrentFlow'
         if macho_content_sha256(binary) != source_content_hash:
             raise RuntimeError('QA executable runtime content differs after re-signing')
         print('QA_APP ' + str(qa_app), flush=True)
+    qa_binary_sha = sha256(binary)
     seeder_log = (root / 'seeder.log').open('w')
     app_log = (root / 'app.log').open('w')
     seeder = subprocess.Popen([str(seeder_binary), str(root), str(options.size_mib)], stdout=seeder_log, stderr=subprocess.STDOUT)
     app = None
     samples = []
     successful = False
+    sleep_checks = []
+    def verify_sleep_phase(phase, expected):
+        if not options.verify_sleep:
+            return
+        evidence = capture_sleep_assertion(app.pid, phase, expected)
+        sleep_checks.append(evidence)
+        evidence_path = root / 'sleep-assertions.json'
+        evidence_path.write_text(json.dumps(sleep_checks, ensure_ascii=False, indent=2) + '\n')
+        print('SLEEP %s %s' % (phase, 'PASS' if evidence['passed'] else 'FAIL'), flush=True)
+        if not evidence['passed']:
+            raise RuntimeError('GUI sleep assertion mismatch during %s; see %s' % (phase, evidence_path))
     try:
         fixture = wait_json(root / 'fixture.json', seeder, 60)
         environment = os.environ.copy()
@@ -283,6 +350,7 @@ def main():
                     raise RuntimeError('Timed out waiting for GUI visibility acknowledgement')
                 time.sleep(.25)
         print('PHASE idle', flush=True)
+        verify_sleep_phase('idle', False)
         sampler.sample('idle')
         deadline = time.monotonic() + options.duration
         while time.monotonic() < deadline:
@@ -302,6 +370,7 @@ def main():
                 raise RuntimeError(state.get('error'))
             if phase == 'transferring':
                 if active_start is None:
+                    verify_sleep_phase('active', True)
                     active_start = time.monotonic()
                     sampler.sample('active')
                     print('PHASE active', flush=True)
@@ -319,6 +388,7 @@ def main():
         if active_duration < options.duration * .75:
             raise RuntimeError('Active transfer too short for representative sampling: %.1f s' % active_duration)
         print('PHASE retained', flush=True)
+        verify_sleep_phase('retained', False)
         sampler.sample('retained')
         deadline = time.monotonic() + options.duration
         while time.monotonic() < deadline:
@@ -330,14 +400,18 @@ def main():
         assert downloaded_sha == sha256(original), 'Downloaded data SHA-256 mismatch'
         assert destination.stat().st_size == fixture['size'], 'Downloaded byte count mismatch'
         assert completed_state['done'] == fixture['size'], 'Application reported incomplete payload'
-        environment_info = {'macos': platform.mac_ver()[0], 'machine': platform.machine(),
+        if sha256(source_binary) != source_binary_sha or sha256(binary) != qa_binary_sha:
+            raise RuntimeError('Release or QA executable changed during the benchmark; refusing to attribute measurements to a different build')
+        environment_info = {'app_version': version, 'macos': platform.mac_ver()[0], 'machine': platform.machine(),
                             'hardware': subprocess.check_output(['sysctl', '-n', 'machdep.cpu.brand_string'], text=True).strip(),
-                            'app_sha256': sha256(source_binary), 'qa_app_sha256': sha256(binary), 'macho_content_sha256': macho_content_sha256(binary), 'release_macho_content_sha256': macho_content_sha256(source_binary), 'signature_only_changes_verified': True, 'app_binary': str(source_binary), 'qa_app_binary': str(binary), 'qa_bundle_identifier': 'com.zel0th.TorrentFlow.Performance', 'app_pid': app.pid,
+                            'app_sha256': source_binary_sha, 'qa_app_sha256': qa_binary_sha, 'macho_content_sha256': source_content_hash, 'release_macho_content_sha256': source_content_hash, 'signature_only_changes_verified': True, 'executables_unchanged_during_measurement': True, 'app_binary': str(source_binary), 'qa_app_binary': str(binary), 'qa_bundle_identifier': qa_bundle_identifier, 'app_pid': app.pid,
                             'sample_interval_s': .5, 'mach_timebase': {'numer': sampler.timebase_numer, 'denom': sampler.timebase_denom}, 'cpu_normalization': '100 percent = one CPU core',
                             'measurement_time_utc': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())}
         result = {'environment': environment_info, 'fixture': {'size_mib': options.size_mib, 'bytes': fixture['size'], 'transport': 'loopback TCP', 'rate_limit_kib_per_s': 8192},
+                  'report_json_file': options.output.name,
                   'summary': {phase: summary(samples, phase) for phase in ('idle', 'active', 'retained')},
                   'validation': {'download_sha256': downloaded_sha, 'reported_done_bytes': completed_state['done'], 'exact_size': destination.stat().st_size},
+                  'sleep_verification': {'requested': options.verify_sleep, 'passed': all(s['passed'] for s in sleep_checks) if options.verify_sleep else None, 'phases': sleep_checks},
                   'samples': samples, 'temporary_root': str(root)}
         options.output.parent.mkdir(parents=True, exist_ok=True)
         options.output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n')

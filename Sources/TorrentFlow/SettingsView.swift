@@ -23,16 +23,21 @@ struct SettingsView: View {
             Toggle("Подтверждать удаление загрузки из списка", isOn: $store.preferences.confirmRemove)
             Text("Liquid Glass следует системным настройкам прозрачности и контрастности.").font(.callout).foregroundStyle(.secondary)
             Spacer()
-            HStack { Text("TorrentFlow 0.2.0"); Spacer(); Text("libtorrent \(TorrentEngine.version)") }.font(.caption).foregroundStyle(.secondary)
+            HStack { Text("TorrentFlow \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.2.1")"); Spacer(); Text("libtorrent \(TorrentEngine.version)") }.font(.caption).foregroundStyle(.secondary)
         }.padding(18)
     }
     private var downloads: some View {
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: 14) {
             PanelTitle(title: "Загрузки", subtitle: "Место сохранения и запуск новых задач")
             GroupBox("Папка по умолчанию") {
                 HStack { Image(systemName: "folder.fill").foregroundStyle(FlowStyle.accent); Text(store.preferences.downloadPath).lineLimit(2).truncationMode(.middle).help(store.preferences.downloadPath); Spacer(); Button("Выбрать…") { store.chooseFolder(store.preferences.downloadPath) { store.preferences.downloadPath = $0 } } }.padding(12)
             }
             Toggle("Начинать загрузку сразу после подтверждения", isOn: $store.preferences.startImmediately)
+            VStack(alignment: .leading, spacing: 5) {
+                Toggle("Не переводить Mac в сон во время загрузки", isOn: $store.preferences.preventSleepWhileDownloading)
+                Text("Экран может погаснуть. После паузы или завершения загрузок обычный режим сна восстановится.")
+                    .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            }
             GroupBox {
                 VStack(alignment: .leading, spacing: 10) {
                     Label("Выбор файлов перед каждым добавлением", systemImage: "checklist").font(.headline)

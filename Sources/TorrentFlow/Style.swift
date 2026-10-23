@@ -6,9 +6,10 @@ struct FlowChrome: ViewModifier {
     @Environment(\.accessibilityReduceTransparency) private var reduce
     @Environment(\.colorSchemeContrast) private var contrast
     func body(content: Content) -> some View {
-        content.background {
-            if reduce || contrast == .increased { Color(nsColor: .windowBackgroundColor) }
-            else { Color.clear.glassEffect(.regular, in: Rectangle()) }
+        if reduce || contrast == .increased {
+            content.background(Color(nsColor: .windowBackgroundColor))
+        } else {
+            content.glassEffect(.regular, in: Rectangle())
         }
     }
 }
@@ -24,6 +25,7 @@ struct PanelTitle: View {
     }
 }
 struct MixedCheckbox: NSViewRepresentable {
+    @Environment(\.isEnabled) private var isEnabled
     var state: Int // 0 off, 1 mixed, 2 on
     var label: String
     var action: (Bool) -> Void
@@ -34,6 +36,7 @@ struct MixedCheckbox: NSViewRepresentable {
         return button
     }
     func updateNSView(_ button: NSButton, context: Context) {
+        button.isEnabled = isEnabled
         context.coordinator.parent = self
         button.state = state == 0 ? .off : state == 2 ? .on : .mixed
         button.setAccessibilityLabel(label)

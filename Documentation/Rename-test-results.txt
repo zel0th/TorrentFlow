@@ -1,0 +1,98 @@
+PASS fresh rename test directory
+PASS rename seeder listens
+PASS rename downloader starts
+PASS original file indices resolved
+PASS hybrid fixture retains repeated virtual padding paths
+PASS invalid basename rejected
+PASS invalid rename leaves draft without payload
+PASS invalid rename leaves original path mapping
+PASS invalid rename leaves original path mapping
+PASS invalid rename leaves original path mapping
+PASS invalid basename rejected
+PASS invalid rename leaves draft without payload
+PASS invalid rename leaves original path mapping
+PASS invalid rename leaves original path mapping
+PASS invalid rename leaves original path mapping
+PASS invalid basename rejected
+PASS invalid rename leaves draft without payload
+PASS invalid rename leaves original path mapping
+PASS invalid rename leaves original path mapping
+PASS invalid rename leaves original path mapping
+PASS invalid basename rejected
+PASS invalid rename leaves draft without payload
+PASS invalid rename leaves original path mapping
+PASS invalid rename leaves original path mapping
+PASS invalid rename leaves original path mapping
+PASS invalid basename rejected
+PASS invalid rename leaves draft without payload
+PASS invalid rename leaves original path mapping
+PASS invalid rename leaves original path mapping
+PASS invalid rename leaves original path mapping
+PASS invalid basename rejected
+PASS invalid rename leaves draft without payload
+PASS invalid rename leaves original path mapping
+PASS invalid rename leaves original path mapping
+PASS invalid rename leaves original path mapping
+PASS case-insensitive collision rejected
+PASS invalid rename leaves draft without payload
+PASS invalid rename leaves original path mapping
+PASS invalid rename leaves original path mapping
+PASS invalid rename leaves original path mapping
+PASS Unicode-normalized collision rejected
+PASS invalid rename leaves draft without payload
+PASS invalid rename leaves original path mapping
+PASS invalid rename leaves original path mapping
+PASS invalid rename leaves original path mapping
+PASS file-versus-directory prefix collision rejected
+PASS invalid rename leaves draft without payload
+PASS invalid rename leaves original path mapping
+PASS invalid rename leaves original path mapping
+PASS invalid rename leaves original path mapping
+PASS unknown file index rejected
+PASS invalid rename leaves draft without payload
+PASS invalid rename leaves original path mapping
+PASS invalid rename leaves original path mapping
+PASS invalid rename leaves original path mapping
+PASS negative file index rejected
+PASS invalid rename leaves draft without payload
+PASS invalid rename leaves original path mapping
+PASS invalid rename leaves original path mapping
+PASS invalid rename leaves original path mapping
+PASS invalid names do not create download destination
+PASS existing unrelated renamed destination rejected
+PASS invalid rename leaves draft without payload
+PASS invalid rename leaves original path mapping
+PASS invalid rename leaves original path mapping
+PASS invalid rename leaves original path mapping
+PASS existing unrelated file unchanged
+PASS symlink ancestor rejected
+PASS invalid rename leaves draft without payload
+PASS invalid rename leaves original path mapping
+PASS invalid rename leaves original path mapping
+PASS invalid rename leaves original path mapping
+PASS symlink ancestor target untouched
+PASS symlink leaf rejected
+PASS invalid rename leaves draft without payload
+PASS invalid rename leaves original path mapping
+PASS invalid rename leaves original path mapping
+PASS invalid rename leaves original path mapping
+PASS symlink leaf target unchanged
+PASS renamed torrent can be added on pause
+PASS torrent snapshot exposes renamed selected path
+PASS excluded rename preserves original parent directory
+PASS renamed torrent first file byte-identical
+PASS renamed torrent second file byte-identical
+PASS original selected basenames not created
+PASS renamed excluded file not downloaded
+PASS renamed torrent restored
+PASS resume restores selected and excluded rename mappings
+PASS renamed torrent paused state restored
+PASS magnet rename waits without file payload
+PASS renamed magnet first file byte-identical
+PASS renamed magnet second file byte-identical
+PASS magnet original selected basenames not created
+PASS magnet renamed excluded file absent
+PASS magnet snapshot uses committed rename mapping
+PASS magnet rename survives restart
+ALL 96 RENAME CHECKS PASSED; libtorrent 2.1.2.0
+
