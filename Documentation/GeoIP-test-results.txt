@@ -1,0 +1,54 @@
+{
+  "provider": "DB-IP",
+  "dataset": "IP to Country Lite",
+  "release": "fixture",
+  "license": "CC BY 4.0",
+  "source_url": "fixture",
+  "source_sha256": "a5ee2c8eec6ba042b0bad7f11a7b4374cb7aa53737edecec7067337acc63640b",
+  "binary_sha256": "dd5b944a376e77183b0b15e85db799f2c3aa331b6325268cae5c068bc4534dad",
+  "ipv4_ranges": 1,
+  "ipv6_ranges": 1,
+  "bytes": 76
+}
+PASS local addresses classified without database
+PASS absent database returns unknown
+PASS valid binary loads
+PASS IPv4 country lookup
+PASS IPv4 inclusive start boundary
+PASS IPv4 inclusive end boundary
+PASS IPv4 gap before range
+PASS IPv4 gap after range
+PASS IPv6 inclusive start boundary
+PASS IPv6 inclusive end boundary
+PASS IPv6 gap before range
+PASS IPv6 gap after range
+PASS IPv4-mapped IPv6 lookup
+PASS private address: 10.5.2.1
+PASS private address: 172.16.0.1
+PASS private address: 172.31.255.255
+PASS private address: 192.168.1.1
+PASS private address: 169.254.1.1
+PASS private address: 100.64.0.1
+PASS private address: ::1
+PASS private address: fc00::1
+PASS private address: fd80::1
+PASS private address: fe80::1%en0
+PASS private address: ::ffff:192.168.0.1
+PASS invalid or multicast address: 
+PASS invalid or multicast address: not-an-ip
+PASS invalid or multicast address: 256.1.1.1
+PASS invalid or multicast address: 8.8.8.8:443
+PASS invalid or multicast address: [::1]:80
+PASS invalid or multicast address: 8.8.8.8%en0
+PASS invalid or multicast address: ::::
+PASS invalid or multicast address: 224.0.0.1
+PASS invalid or multicast address: ff02::1
+PASS truncated database rejected
+PASS failed load preserves validated database
+PASS reversed range rejected
+PASS invalid country code rejected
+PASS bundled DB-IP database loads
+PASS bundled DB: Google IPv4 US
+PASS bundled DB: pinned Google anycast IPv6 CA range
+PASS bundled DB: neighboring Google IPv6 US range
+ALL 41 GEOIP CHECKS PASSED

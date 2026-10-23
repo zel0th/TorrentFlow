@@ -1,0 +1,21 @@
+IP Geolocation by DB-IP
+https://db-ip.com/
+
+TorrentFlow's offline country database is derived from DB-IP IP to Country Lite,
+October 2026 release. Source: https://db-ip.com/db/download/ip-to-country-lite
+CSV format: https://db-ip.com/db/format/ip-to-country-lite/csv.html
+
+DB-IP Lite is licensed under the Creative Commons Attribution 4.0 International
+License (CC BY 4.0): https://creativecommons.org/licenses/by/4.0/
+Legal code: https://creativecommons.org/licenses/by/4.0/legalcode
+
+Copyright DB-IP. This database may be copied and redistributed, including in
+commercial applications, with attribution and a link to the licence. No
+endorsement by DB-IP is implied. DB-IP Lite has reduced coverage and accuracy
+compared with the commercial database. Country results are approximate IP
+network locations; VPN/proxy exit addresses can show a different country.
+
+Modifications by TorrentFlow: transformed CSV address ranges to a compact,
+sorted binary index; removed unknown (ZZ) ranges; merged adjacent ranges with
+the same country. No runtime online geolocation requests are made.
+See Resources/GeoIP.json for exact source URL, SHA-256 checksums and row counts.

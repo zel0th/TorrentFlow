@@ -1,0 +1,30 @@
+#!/bin/bash
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+CACHE="${TMPDIR:-/tmp/}TorrentFlow-build"
+export CLANG_MODULE_CACHE_PATH="$CACHE/clang"
+export SWIFTPM_MODULECACHE_OVERRIDE="$CACHE/modules"
+mkdir -p "$CACHE" "$ROOT/build/releases"
+[ -f "$ROOT/Vendor/lib/libtorrent-rasterbar.a" ] || bash "$ROOT/Scripts/bootstrap-engine.sh"
+[ -f "$ROOT/Design/AppIcon.icns" ] || bash "$ROOT/Scripts/build-icon.sh"
+swift build --package-path "$ROOT" --scratch-path "$CACHE/products" --cache-path "$CACHE/cache" --config-path "$CACHE/config" --security-path "$CACHE/security" --disable-sandbox --build-system native -c release
+BIN="$(swift build --package-path "$ROOT" --scratch-path "$CACHE/products" --cache-path "$CACHE/cache" --config-path "$CACHE/config" --security-path "$CACHE/security" --disable-sandbox --build-system native -c release --show-bin-path)"
+STAGE="$(mktemp -d "$CACHE/package.XXXXXX")"
+trap 'rm -rf "$STAGE"' EXIT
+APP="$STAGE/TorrentFlow.app"
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources/Licenses"
+cp -X "$BIN/TorrentFlow" "$APP/Contents/MacOS/TorrentFlow"
+cp -X "$ROOT/Info.plist" "$APP/Contents/Info.plist"
+cp -X "$ROOT/Design/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
+cp -X /etc/ssl/cert.pem "$APP/Contents/Resources/cacert.pem"
+cp -X "$ROOT/Documentation/Help.html" "$APP/Contents/Resources/Help.html"
+if [ -d "$ROOT/Resources" ]; then ditto --norsrc --noextattr "$ROOT/Resources" "$APP/Contents/Resources"; fi
+cp -X "$ROOT/Documentation/Licenses/"* "$APP/Contents/Resources/Licenses/"
+codesign --force --sign - "$APP"
+codesign --verify --deep --strict "$APP"
+VERSION="$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$APP/Contents/Info.plist")"
+ARCHIVE="$ROOT/build/releases/TorrentFlow-$VERSION-macOS-arm64.zip"
+ditto -c -k --norsrc --noextattr --keepParent "$APP" "$ARCHIVE"
+ditto --norsrc --noextattr "$APP" "$ROOT/build/TorrentFlow.app"
+shasum -a 256 "$ARCHIVE" > "$ROOT/build/releases/SHA256SUMS.txt"
+printf 'Built: %s\nArchive: %s\n' "$ROOT/build/TorrentFlow.app" "$ARCHIVE"

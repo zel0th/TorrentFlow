@@ -1,0 +1,12 @@
+{
+  "provider": "DB-IP",
+  "dataset": "IP to Country Lite",
+  "release": "2026-10",
+  "license": "CC BY 4.0",
+  "source_url": "https://github.com/sapics/ip-location-db/tree/0446a112ca157c1cf0edae81e92da5200465505b/dbip-country",
+  "source_sha256": "4204f9f41f0f00a3de365ed84584a5d404afe7b08fd1ff87de96cbeaaf10dd84",
+  "binary_sha256": "35cce3e8a91daa4458bdfe547f74e42c29460610aa6901d9445c378b0dfde7cd",
+  "ipv4_ranges": 362108,
+  "ipv6_ranges": 348708,
+  "bytes": 15477184
+}

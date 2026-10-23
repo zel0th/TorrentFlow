@@ -1,0 +1,29 @@
+PASS fresh regression directory
+PASS local seeder listens
+PASS downloader starts
+PASS selected file index resolved from metadata
+PASS torrent control downloads through tracker
+PASS torrent control excludes unwanted file
+PASS magnet contains tracker but no explicit peer
+PASS tracker-only magnet receives metadata
+PASS metadata discovery downloads zero file payload
+PASS metadata discovery creates no content files
+PASS peer discovered from real HTTP tracker
+PASS log contains actual libtorrent metadata event
+PASS log contains actual tracker peer reply
+PASS inspector exposes actual connected tracker-discovered peer
+PASS loopback peer marked as local country
+PASS peer client comes from seeder advertised handshake
+PASS magnet payload finishes with tracker unavailable after metadata
+PASS magnet-selected payload matches byte-for-byte
+PASS magnet excluded file remains absent
+PASS magnet writes only to confirmed destination
+PASS magnet handoff preserves selected high priority
+PASS second metadata probe starts without payload
+PASS magnet reuses existing valid files without redownloading
+PASS existing destination payload remains byte-identical
+PASS unrelated destination file preserved
+PASS existing destination still excludes unselected file
+ALL 26 TRACKER-DISCOVERY CHECKS PASSED; libtorrent 2.1.2.0
+
+EXIT 0

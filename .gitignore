@@ -1,0 +1,8 @@
+.DS_Store
+.build/
+.swiftpm/
+build/
+Vendor/
+*.resume
+*.tmp
+Resources/*.bin

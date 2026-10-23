@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "macos": "27.0.1",
+  "architecture": "arm64",
+  "signing": "ad-hoc",
+  "notarized": false,
+  "sha256": {
+    "build/TorrentFlow.app/Contents/MacOS/TorrentFlow": "097e0353edb5243eb04b9077c58e4801b34d7ce2448069f5d091dbd260c2fb0c",
+    "build/releases/TorrentFlow-0.2.0-macOS-arm64.zip": "82cec95116af5373fb243e4b6056436b900270606276093474ad9eddec7a417a",
+    "Resources/GeoIP.bin": "35cce3e8a91daa4458bdfe547f74e42c29460610aa6901d9445c378b0dfde7cd",
+    "Design/Icon-Master.png": "75038b07871037ff21a4ed0c8267370116c1986f344d01ef6f4f4dfc78a4bf7e",
+    "Design/AppIcon.icns": "c9ec27b86010cb1d2e486af58327692a8c816c2797aec7419ab049f81cb70926"
+  }
+}

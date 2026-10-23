@@ -1,0 +1,44 @@
+PASS fresh test directory
+PASS local seeder listens
+PASS engine starts
+PASS invalid magnet rejected
+PASS missing file rejected
+PASS staging errors recorded in session logs
+PASS log ring count bounded after event flood
+PASS bounded log retains latest event
+PASS clear logs removes visible session history
+PASS torrent files ready before task starts
+PASS duplicate torrent rejected
+PASS v1 magnet duplicate of hybrid draft rejected
+PASS empty selection rejected
+PASS validation does not create download destination
+PASS magnet reveals full file list
+PASS magnet downloaded zero payload before confirmation
+PASS metadata mode creates no content files
+PASS file priorities mapped by torrent index
+PASS incorrect priority vector rejected
+PASS add on pause honored
+PASS unselected summary omits file traversal payload
+PASS selected summary includes file details
+PASS v1 magnet duplicate of committed hybrid rejected
+PASS only selected bytes counted
+PASS high priority file matches byte-for-byte
+PASS excluded file not created
+PASS low priority Unicode file matches byte-for-byte
+PASS priorities survive metadata handoff
+PASS task restored from disk
+PASS paused state restored
+PASS download progress restored
+PASS file selection restored
+PASS file priorities editable after addition
+PASS prepare removal retains recovery resume record
+PASS prepared removal retains paused task row
+PASS prepare removal does not delete content
+PASS failed Trash transaction restores task on pause
+PASS final removal deletes recovery record only after success
+PASS removed task stays removed on restart
+PASS removing task preserves downloaded files
+PASS v2-only torrents supported
+ALL 41 CHECKS PASSED; libtorrent 2.1.2.0
+
+EXIT 0
