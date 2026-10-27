@@ -6,7 +6,7 @@ typealias ViewState<Value> = SwiftUI.State<Value>
 enum FilePriority: Int, CaseIterable, Identifiable, Codable {
     case skip = 0, low = 1, normal = 4, high = 7
     var id: Int { rawValue }
-    var title: String { switch self { case .skip: "Не загружать"; case .low: "Низкий"; case .normal: "Обычный"; case .high: "Высокий" } }
+    var title: String { switch self { case .skip: L10n.text("Не загружать"); case .low: L10n.text("Низкий"); case .normal: L10n.text("Обычный"); case .high: L10n.text("Высокий") } }
 }
 struct TorrentFile: Decodable, Identifiable, Sendable, Equatable {
     let index: Int
@@ -41,26 +41,27 @@ struct Transfer: Decodable, Identifiable, Sendable, Equatable {
     let hash: String
     let files: [TorrentFile]
     let trackers: [String]
+    var displayName: String { draft && !hasMetadata && name == "Magnet · получение метаданных" ? L10n.text(name) : name }
     var progress: Double { wanted > 0 ? min(1, Double(done) / Double(wanted)) : 0 }
     var paused: Bool { phase == "paused" }
     var complete: Bool { wanted > 0 && done >= wanted }
     var status: String {
         switch phase {
-        case "metadata": "Получение списка файлов…"
-        case "ready": "Готово к добавлению"
-        case "paused": "Приостановлено"
-        case "checking": "Проверка файлов…"
-        case "seeding": "Раздаётся"
-        case "error": error
-        default: downloadRate > 0 ? "Загружается" : "Поиск пиров…"
+        case "metadata": L10n.text("Получение списка файлов…")
+        case "ready": L10n.text("Готово к добавлению")
+        case "paused": L10n.text("Приостановлено")
+        case "checking": L10n.text("Проверка файлов…")
+        case "seeding": L10n.text("Раздаётся")
+        case "error": L10n.message(error)
+        default: downloadRate > 0 ? L10n.text("Загружается") : L10n.text("Поиск пиров…")
         }
     }
     var eta: String {
         guard downloadRate > 0 && wanted > done else { return "—" }
         let seconds = Int((wanted - done) / downloadRate)
-        if seconds < 60 { return "< 1 мин" }
-        if seconds < 3600 { return "\(seconds / 60) мин" }
-        return "\(seconds / 3600) ч \(seconds % 3600 / 60) мин"
+        if seconds < 60 { return L10n.text("< 1 мин") }
+        if seconds < 3600 { return L10n.format("%lld мин", Int64(seconds / 60)) }
+        return L10n.format("%lld ч %lld мин", Int64(seconds / 3600), Int64(seconds % 3600 / 60))
     }
 }
 struct EngineResponse: Decodable, Sendable {
@@ -80,6 +81,7 @@ struct PeerDetail: Decodable, Identifiable, Sendable, Equatable {
     let uploadRate: Int64
     let progress: Double
     let seed: Bool
+    var displayClient: String { client.isEmpty ? L10n.text("Не сообщил") : client == "Определяется…" ? L10n.text(client) : client }
 }
 struct LogEntry: Decodable, Identifiable, Sendable, Equatable {
     let id: UInt64
@@ -87,15 +89,16 @@ struct LogEntry: Decodable, Identifiable, Sendable, Equatable {
     let level: String
     let message: String
     let torrentID: String
+    var displayMessage: String { L10n.message(message) }
 }
 struct EngineFailure: LocalizedError {
     let message: String
-    var errorDescription: String? { message }
+    var errorDescription: String? { L10n.message(message) }
 }
 enum TransferFilter: String, CaseIterable, Identifiable {
     case all, active, downloading, seeding, paused, error
     var id: Self { self }
-    var title: String { switch self { case .all: "Все"; case .active: "Активные"; case .downloading: "Скачиваю"; case .seeding: "Раздаю"; case .paused: "Приостановлены"; case .error: "Ошибки" } }
+    var title: String { switch self { case .all: L10n.text("Все"); case .active: L10n.text("Активные"); case .downloading: L10n.text("Скачиваю"); case .seeding: L10n.text("Раздаю"); case .paused: L10n.text("Приостановлены"); case .error: L10n.text("Ошибки") } }
     var symbol: String { switch self { case .all: "tray.full"; case .active: "waveform.path"; case .downloading: "arrow.down.circle"; case .seeding: "arrow.up.circle"; case .paused: "pause.circle"; case .error: "exclamationmark.circle" } }
     func matches(_ t: Transfer) -> Bool {
         switch self {
@@ -112,6 +115,7 @@ struct Preferences: Codable, Equatable, Sendable {
     var downloadPath = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!.path
     var startImmediately = true
     var appearance = "system"
+    var language = "system"
     var filterFont = 17.0
     var confirmRemove = true
     var downLimit = 0
@@ -130,7 +134,7 @@ struct Preferences: Codable, Equatable, Sendable {
 
     init() {}
     private enum CodingKeys: String, CodingKey {
-        case downloadPath, startImmediately, appearance, filterFont, confirmRemove
+        case downloadPath, startImmediately, appearance, language, filterFont, confirmRemove
         case downLimit, upLimit, alternate, altDown, altUp, ratioLimit, connections
         case dht, lsd, portMapping, port, requireEncryption, preventSleepWhileDownloading
     }
@@ -141,6 +145,7 @@ struct Preferences: Codable, Equatable, Sendable {
         downloadPath = try c.decodeIfPresent(String.self, forKey: .downloadPath) ?? downloadPath
         startImmediately = try c.decodeIfPresent(Bool.self, forKey: .startImmediately) ?? startImmediately
         appearance = try c.decodeIfPresent(String.self, forKey: .appearance) ?? appearance
+        language = L10n.normalizedSelection(try c.decodeIfPresent(String.self, forKey: .language) ?? language)
         filterFont = try c.decodeIfPresent(Double.self, forKey: .filterFont) ?? filterFont
         confirmRemove = try c.decodeIfPresent(Bool.self, forKey: .confirmRemove) ?? confirmRemove
         downLimit = try c.decodeIfPresent(Int.self, forKey: .downLimit) ?? downLimit
@@ -177,5 +182,5 @@ struct FileNode: Identifiable {
         return level(files.filter(\.selectable).map { ($0, $0.path.split(separator: "/").map(String.init)) }, prefix: "")
     }
 }
-func bytes(_ n: Int64) -> String { ByteCountFormatter.string(fromByteCount: n, countStyle: .file) }
-func rate(_ n: Int64) -> String { bytes(n) + "/с" }
+func bytes(_ n: Int64) -> String { n.formatted(.byteCount(style: .file, spellsOutZero: false).locale(L10n.locale)) }
+func rate(_ n: Int64) -> String { L10n.format("%@/с", bytes(n)) }

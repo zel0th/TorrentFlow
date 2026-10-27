@@ -14,29 +14,34 @@ import AppKit
         if let cert = Bundle.main.path(forResource: "cacert", ofType: "pem") { setenv("SSL_CERT_FILE", cert, 0) }
     }
     var body: some Scene {
-        Window("TorrentFlow", id: "main") { MainView(store: store).tint(FlowStyle.accent).task { await store.runPerformanceScenarioIfRequested() } }
+        Window("TorrentFlow", id: "main") {
+            MainView(store: store).tint(FlowStyle.accent)
+                .environment(\.locale, L10n.locale)
+                .onReceive(NotificationCenter.default.publisher(for: NSLocale.currentLocaleDidChangeNotification)) { _ in store.refreshLocalization() }
+                .task { await store.runPerformanceScenarioIfRequested() }
+        }
             .defaultSize(width: 1250, height: 750)
             .windowResizability(.contentMinSize)
             .commands {
                 CommandGroup(replacing: .newItem) {
-                    Button("Открыть торрент…", action: store.openFiles).keyboardShortcut("o")
-                    Button("Открыть magnet-ссылку…") { store.showMagnet = true }.keyboardShortcut("l")
+                    Button(L10n.text("Открыть торрент…"), action: store.openFiles).keyboardShortcut("o")
+                    Button(L10n.text("Открыть magnet-ссылку…")) { store.showMagnet = true }.keyboardShortcut("l")
                 }
-                CommandMenu("Загрузки") {
-                    Button("Возобновить выбранную") { if let t = store.selected { store.command(t.id, "resume") } }.disabled(store.selected == nil)
-                    Button("Приостановить выбранную") { if let t = store.selected { store.command(t.id, "pause") } }.disabled(store.selected == nil)
+                CommandMenu(L10n.text("Загрузки")) {
+                    Button(L10n.text("Возобновить выбранную")) { if let t = store.selected { store.command(t.id, "resume") } }.disabled(store.selected == nil)
+                    Button(L10n.text("Приостановить выбранную")) { if let t = store.selected { store.command(t.id, "pause") } }.disabled(store.selected == nil)
                     Divider()
-                    Button("Возобновить все") { for t in store.downloads { store.command(t.id, "resume") } }.keyboardShortcut("r", modifiers: [.command, .shift])
-                    Button("Приостановить все") { for t in store.downloads { store.command(t.id, "pause") } }.keyboardShortcut("p", modifiers: [.command, .shift])
+                    Button(L10n.text("Возобновить все")) { for t in store.downloads { store.command(t.id, "resume") } }.keyboardShortcut("r", modifiers: [.command, .shift])
+                    Button(L10n.text("Приостановить все")) { for t in store.downloads { store.command(t.id, "pause") } }.keyboardShortcut("p", modifiers: [.command, .shift])
                     Divider()
-                    Button("Показать в Finder") { if let t = store.selected { store.reveal(t) } }.disabled(store.selected == nil)
-                    Button("Проверить файлы") { if let t = store.selected { store.command(t.id, "verify") } }.disabled(store.selected == nil)
-                    Button("Удалить из списка…") { if let t = store.selected { store.remove(t.id) } }.keyboardShortcut(.delete, modifiers: .command).disabled(store.selected == nil || store.busy)
-                    Button("Удалить вместе с файлами…") { if let t = store.selected { store.requestRemoveWithFiles(t.id) } }.disabled(store.selected == nil || store.busy)
+                    Button(L10n.text("Показать в Finder")) { if let t = store.selected { store.reveal(t) } }.disabled(store.selected == nil)
+                    Button(L10n.text("Проверить файлы")) { if let t = store.selected { store.command(t.id, "verify") } }.disabled(store.selected == nil)
+                    Button(L10n.text("Удалить из списка…")) { if let t = store.selected { store.remove(t.id) } }.keyboardShortcut(.delete, modifiers: .command).disabled(store.selected == nil || store.busy)
+                    Button(L10n.text("Удалить вместе с файлами…")) { if let t = store.selected { store.requestRemoveWithFiles(t.id) } }.disabled(store.selected == nil || store.busy)
                 }
-                CommandGroup(after: .toolbar) { Button("Показать инспектор") { store.inspector.toggle() }.keyboardShortcut("i", modifiers: [.command, .option]) }
-                CommandGroup(replacing: .help) { Button("Справка TorrentFlow") { if let url = Bundle.main.url(forResource: "Help", withExtension: "html") { NSWorkspace.shared.open(url) } } }
+                CommandGroup(after: .toolbar) { Button(L10n.text("Показать инспектор")) { store.inspector.toggle() }.keyboardShortcut("i", modifiers: [.command, .option]) }
+                CommandGroup(replacing: .help) { Button(L10n.text("Справка TorrentFlow")) { if let url = L10n.resourceURL("Help", withExtension: "html") { NSWorkspace.shared.open(url) } } }
             }
-        Settings { SettingsView(store: store).tint(FlowStyle.accent) }
+        Settings { SettingsView(store: store).tint(FlowStyle.accent).environment(\.locale, L10n.locale) }
     }
 }

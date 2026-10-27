@@ -1,0 +1,214 @@
+{
+  "bundle_identifier" : "com.zel0th.TorrentFlow.RenderTests.63e382719952458f9775658e6f2de9eb",
+  "desktop_captured" : false,
+  "input_sent" : false,
+  "live_switch_changed_pixels" : true,
+  "live_switch_returned_to_russian_pixels" : false,
+  "state_root" : "\/var\/folders\/x5\/bn15z6v942d64pbgzts3nml80000gn\/T\/torrentflow-ui-render.u8mgW5\/results-release\/state",
+  "views" : [
+    {
+      "fitting_height" : 520,
+      "fitting_width" : 720,
+      "height" : 520,
+      "name" : "settings-ru-0",
+      "png" : "\/var\/folders\/x5\/bn15z6v942d64pbgzts3nml80000gn\/T\/torrentflow-ui-render.u8mgW5\/results-release\/settings-ru-0.png",
+      "png_sha256" : "644704f96c4987b4976b58ecafae0cd529a658bece22615d597f49bb26526e1d",
+      "scrolling_required" : [
+
+      ],
+      "width" : 720
+    },
+    {
+      "fitting_height" : 520,
+      "fitting_width" : 720,
+      "height" : 520,
+      "name" : "settings-ru-1",
+      "png" : "\/var\/folders\/x5\/bn15z6v942d64pbgzts3nml80000gn\/T\/torrentflow-ui-render.u8mgW5\/results-release\/settings-ru-1.png",
+      "png_sha256" : "9c0a8ed248aa94242dd4b3027d459cef3c513a56316857d8fc4bfdd27c286188",
+      "scrolling_required" : [
+
+      ],
+      "width" : 720
+    },
+    {
+      "fitting_height" : 520,
+      "fitting_width" : 720,
+      "height" : 520,
+      "name" : "settings-ru-2",
+      "png" : "\/var\/folders\/x5\/bn15z6v942d64pbgzts3nml80000gn\/T\/torrentflow-ui-render.u8mgW5\/results-release\/settings-ru-2.png",
+      "png_sha256" : "c6e8f52325cb6ccc2fff41f7232dd28088dc28bd629ba1415dcb75564a15afba",
+      "scrolling_required" : [
+
+      ],
+      "width" : 720
+    },
+    {
+      "fitting_height" : 520,
+      "fitting_width" : 720,
+      "height" : 520,
+      "name" : "settings-ru-3",
+      "png" : "\/var\/folders\/x5\/bn15z6v942d64pbgzts3nml80000gn\/T\/torrentflow-ui-render.u8mgW5\/results-release\/settings-ru-3.png",
+      "png_sha256" : "5be6f6e521cf497d7155365e4a7e28170db6643a011ee25d183528a5d71e9c86",
+      "scrolling_required" : [
+
+      ],
+      "width" : 720
+    },
+    {
+      "fitting_height" : 86,
+      "fitting_width" : 861.5,
+      "height" : 320,
+      "name" : "files-ru-light",
+      "png" : "\/var\/folders\/x5\/bn15z6v942d64pbgzts3nml80000gn\/T\/torrentflow-ui-render.u8mgW5\/results-release\/files-ru-light.png",
+      "png_sha256" : "95122ba2d6fc8212f90cba1a2ffc8ce4d789e62d260bcde4396af472ae969245",
+      "scrolling_required" : [
+
+      ],
+      "width" : 1120
+    },
+    {
+      "fitting_height" : 86,
+      "fitting_width" : 861.5,
+      "height" : 320,
+      "name" : "files-ru-dark",
+      "png" : "\/var\/folders\/x5\/bn15z6v942d64pbgzts3nml80000gn\/T\/torrentflow-ui-render.u8mgW5\/results-release\/files-ru-dark.png",
+      "png_sha256" : "854873fb89ebc276e076b9c6cfe3fcbaf0bfa80441d98a7c6baa621cd1a2ef1c",
+      "scrolling_required" : [
+
+      ],
+      "width" : 1120
+    },
+    {
+      "fitting_height" : 520,
+      "fitting_width" : 720,
+      "height" : 520,
+      "name" : "settings-en-0",
+      "png" : "\/var\/folders\/x5\/bn15z6v942d64pbgzts3nml80000gn\/T\/torrentflow-ui-render.u8mgW5\/results-release\/settings-en-0.png",
+      "png_sha256" : "a1b1214c4daf7f2d25612feadea8f25e069fbc8939112bfab5ecc2d6ccb1ccba",
+      "scrolling_required" : [
+
+      ],
+      "width" : 720
+    },
+    {
+      "fitting_height" : 520,
+      "fitting_width" : 720,
+      "height" : 520,
+      "name" : "settings-en-1",
+      "png" : "\/var\/folders\/x5\/bn15z6v942d64pbgzts3nml80000gn\/T\/torrentflow-ui-render.u8mgW5\/results-release\/settings-en-1.png",
+      "png_sha256" : "d0e064fabcf5328266b83f5bacb0316962b4ae46f001c4729b8c1186a801b08a",
+      "scrolling_required" : [
+
+      ],
+      "width" : 720
+    },
+    {
+      "fitting_height" : 520,
+      "fitting_width" : 720,
+      "height" : 520,
+      "name" : "settings-en-2",
+      "png" : "\/var\/folders\/x5\/bn15z6v942d64pbgzts3nml80000gn\/T\/torrentflow-ui-render.u8mgW5\/results-release\/settings-en-2.png",
+      "png_sha256" : "7eb6cca382668cb5ea93a721d4b1373e90093d15b8555899517c8eda1d32b959",
+      "scrolling_required" : [
+
+      ],
+      "width" : 720
+    },
+    {
+      "fitting_height" : 520,
+      "fitting_width" : 720,
+      "height" : 520,
+      "name" : "settings-en-3",
+      "png" : "\/var\/folders\/x5\/bn15z6v942d64pbgzts3nml80000gn\/T\/torrentflow-ui-render.u8mgW5\/results-release\/settings-en-3.png",
+      "png_sha256" : "128e13c08c7ddece89ff35d4adeacd52d68dfd3909dc41d4bcdcd3b13b69a928",
+      "scrolling_required" : [
+
+      ],
+      "width" : 720
+    },
+    {
+      "fitting_height" : 86,
+      "fitting_width" : 849,
+      "height" : 320,
+      "name" : "files-en-light",
+      "png" : "\/var\/folders\/x5\/bn15z6v942d64pbgzts3nml80000gn\/T\/torrentflow-ui-render.u8mgW5\/results-release\/files-en-light.png",
+      "png_sha256" : "2fa1ed679e01214c99419d5e4be028dc4546d36885ff55aa8ef6e19d68ccc43f",
+      "scrolling_required" : [
+
+      ],
+      "width" : 1120
+    },
+    {
+      "fitting_height" : 86,
+      "fitting_width" : 849,
+      "height" : 320,
+      "name" : "files-en-dark",
+      "png" : "\/var\/folders\/x5\/bn15z6v942d64pbgzts3nml80000gn\/T\/torrentflow-ui-render.u8mgW5\/results-release\/files-en-dark.png",
+      "png_sha256" : "c6710460778649b21c2014f59ec866d0c302febbe578c2c077ec9bd5fd4a0d3a",
+      "scrolling_required" : [
+
+      ],
+      "width" : 1120
+    },
+    {
+      "fitting_height" : 520,
+      "fitting_width" : 720,
+      "height" : 520,
+      "name" : "settings-live-ru",
+      "png" : "\/var\/folders\/x5\/bn15z6v942d64pbgzts3nml80000gn\/T\/torrentflow-ui-render.u8mgW5\/results-release\/settings-live-ru.png",
+      "png_sha256" : "c6e8f52325cb6ccc2fff41f7232dd28088dc28bd629ba1415dcb75564a15afba",
+      "scrolling_required" : [
+
+      ],
+      "width" : 720
+    },
+    {
+      "fitting_height" : 520,
+      "fitting_width" : 720,
+      "height" : 520,
+      "name" : "settings-live-en",
+      "png" : "\/var\/folders\/x5\/bn15z6v942d64pbgzts3nml80000gn\/T\/torrentflow-ui-render.u8mgW5\/results-release\/settings-live-en.png",
+      "png_sha256" : "96152d39667cef5fa686662175ad2087b26fc242dbf7168eb871fd3dfdf0879d",
+      "scrolling_required" : [
+
+      ],
+      "width" : 720
+    },
+    {
+      "fitting_height" : 520,
+      "fitting_width" : 720,
+      "height" : 520,
+      "name" : "settings-live-ru-again",
+      "png" : "\/var\/folders\/x5\/bn15z6v942d64pbgzts3nml80000gn\/T\/torrentflow-ui-render.u8mgW5\/results-release\/settings-live-ru-again.png",
+      "png_sha256" : "83ea15554ce13693932f94e4bae63494113fd0a7f23ff40519d2467621621958",
+      "scrolling_required" : [
+
+      ],
+      "width" : 720
+    },
+    {
+      "fitting_height" : 680,
+      "fitting_width" : 900,
+      "height" : 680,
+      "name" : "add-ru",
+      "png" : "\/var\/folders\/x5\/bn15z6v942d64pbgzts3nml80000gn\/T\/torrentflow-ui-render.u8mgW5\/results-release\/add-ru.png",
+      "png_sha256" : "8c8a3c762ee74122621f87e6c6f12534d23e7c0ff7f07649e43886e1fb180eb5",
+      "scrolling_required" : [
+
+      ],
+      "width" : 900
+    },
+    {
+      "fitting_height" : 680,
+      "fitting_width" : 900,
+      "height" : 680,
+      "name" : "add-en",
+      "png" : "\/var\/folders\/x5\/bn15z6v942d64pbgzts3nml80000gn\/T\/torrentflow-ui-render.u8mgW5\/results-release\/add-en.png",
+      "png_sha256" : "44166d745ea1056ccbeedd9eae8818bd36fd6f588b9d972c518178786ea81b3f",
+      "scrolling_required" : [
+
+      ],
+      "width" : 900
+    }
+  ]
+}

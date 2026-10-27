@@ -28,8 +28,12 @@ import UniformTypeIdentifiers
     @Published var removeFiles = false
     @Published var preferences: Preferences {
         didSet {
+            if oldValue.language != preferences.language { L10n.configure(preferences.language) }
             updateSleepPrevention()
             if let bytes = try? JSONEncoder().encode(preferences) { UserDefaults.standard.set(bytes, forKey: "preferences.v1") }
+            var previous = oldValue
+            previous.language = preferences.language
+            guard previous != preferences else { return }
             configTask?.cancel()
             configTask = Task { [weak self] in
                 try? await Task.sleep(for: .milliseconds(250))
@@ -51,7 +55,9 @@ import UniformTypeIdentifiers
     private var stopping = false
     private let sleepPrevention = SleepPreventionController()
     private init() {
-        preferences = UserDefaults.standard.data(forKey: "preferences.v1").flatMap { try? JSONDecoder().decode(Preferences.self, from: $0) } ?? Preferences()
+        let restoredPreferences = UserDefaults.standard.data(forKey: "preferences.v1").flatMap { try? JSONDecoder().decode(Preferences.self, from: $0) } ?? Preferences()
+        preferences = restoredPreferences
+        L10n.configure(restoredPreferences.language)
         let root: URL
         if let custom = ProcessInfo.processInfo.environment["TORRENTFLOW_STATE_ROOT"] { root = URL(fileURLWithPath: custom) }
         else { root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!.appendingPathComponent("TorrentFlow", isDirectory: true) }
@@ -70,6 +76,9 @@ import UniformTypeIdentifiers
                 try? await Task.sleep(for: waitingForMetadata ? .milliseconds(250) : .seconds(1))
             }
         }
+    }
+    func refreshLocalization() {
+        if preferences.language == "system" { L10n.configure("system") }
     }
     var downloads: [Transfer] { transfers.filter { !$0.draft } }
     var visible: [Transfer] { downloads.filter { filter.matches($0) && (search.isEmpty || $0.name.localizedCaseInsensitiveContains(search)) }.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending } }
@@ -140,7 +149,9 @@ import UniformTypeIdentifiers
     }
     func openFiles() {
         let panel = NSOpenPanel(); panel.allowedContentTypes = [UTType(filenameExtension: "torrent") ?? .data]; panel.allowsMultipleSelection = true
-        panel.message = "Выберите торрент-файлы. Перед загрузкой можно выбрать содержимое и приоритеты."
+        panel.message = L10n.text("Выберите торрент-файлы. Перед загрузкой можно выбрать содержимое и приоритеты.")
+        panel.title = L10n.text("Открыть торрент…")
+        panel.prompt = L10n.text("Открыть")
         if panel.runModal() == .OK { importSources(panel.urls.map(\.path)) }
     }
     func importSources(_ new: [String]) {
@@ -281,7 +292,7 @@ import UniformTypeIdentifiers
                 } else {
                     try await engine.command(id, "restore-remove")
                     let message = "Часть файлов не удалось переместить в Корзину. Загрузка восстановлена на паузе; оставшиеся файлы можно удалить повторно:\n" + failures.prefix(5).joined(separator: "\n")
-                    await engine.note(message, level: "error"); self.error = message
+                    await engine.note(message, level: "error"); self.error = L10n.message(message)
                 }
                 await refresh()
             } catch {
@@ -294,6 +305,8 @@ import UniformTypeIdentifiers
     }
     func chooseFolder(_ current: String, completion: (String) -> Void) {
         let panel = NSOpenPanel(); panel.canChooseDirectories = true; panel.canChooseFiles = false; panel.canCreateDirectories = true
+        panel.title = L10n.text("Папка загрузки")
+        panel.prompt = L10n.text("Выбрать")
         panel.directoryURL = URL(fileURLWithPath: current)
         if panel.runModal() == .OK, let url = panel.url { completion(url.path) }
     }

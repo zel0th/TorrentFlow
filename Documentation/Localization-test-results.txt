@@ -1,0 +1,40 @@
+PASS substantial Russian and English catalogs are bundled
+PASS both languages cover exactly the same keys
+PASS all catalog values are present
+PASS every translation preserves printf argument types and order
+PASS Russian catalog retains original source wording
+PASS every explicit application localization key exists in both catalogs
+PASS explicit Russian overrides the system
+PASS explicit English overrides the system
+PASS automatic mode recognizes regional Russian
+PASS automatic mode respects system preference order
+PASS automatic mode skips unsupported languages
+PASS unsupported system languages fall back to English
+PASS empty system preferences fall back to English
+PASS invalid saved language safely uses automatic mode
+PASS unknown preference values normalize safely
+PASS configured language and formatting locale agree
+PASS explicit English selects the English resource bundle
+PASS unknown keys remain unchanged
+PASS file-count text formats numeric and string arguments
+PASS model titles follow the selected language
+PASS speed units use the chosen language
+PASS file names and percent signs survive formatted labels
+PASS exact app engine errors translate
+PASS diagnostic template preserves the file path verbatim
+PASS diagnostic prefix and suffix translate together
+PASS unrecognized third-party messages are not rewritten
+PASS diagnostic templates require the complete suffix
+PASS Help follows the explicit language
+PASS English Help contains translated instructions
+PASS language changes notify observing SwiftUI content
+PASS switching language updates existing call sites immediately
+PASS Russian diagnostic text and user data remain intact
+PASS Russian speed suffix is restored immediately
+PASS Russian Help is selected after switching
+PASS returning to automatic mode reevaluates preferred languages
+PASS app language changes do not modify macOS language preferences
+PASS old preference records gain automatic language without losing existing values
+PASS explicit language persists with the complete settings record
+PASS unsupported persisted language retains other settings
+ALL 39 LOCALIZATION CHECKS PASSED

@@ -1,0 +1,53 @@
+{
+  "version": "0.2.2",
+  "macos": "27.2",
+  "sdk": "27.0",
+  "swift": "6.4",
+  "architecture": "arm64",
+  "signing": "ad-hoc",
+  "notarized": false,
+  "sha256": {
+    "build/TorrentFlow.app/Contents/MacOS/TorrentFlow": "6d410517456db5e4e086896d7199ffc8cb8a91eb14fb2839ab8c4b3b0287de3f",
+    "build/releases/TorrentFlow-0.2.2-macOS-arm64.zip": "a16b28839153ed6301539b85955e2f5aec69b45f079f81396a02d28c84fd0284",
+    "Resources/GeoIP.bin": "35cce3e8a91daa4458bdfe547f74e42c29460610aa6901d9445c378b0dfde7cd",
+    "Design/Icon-Master.png": "75038b07871037ff21a4ed0c8267370116c1986f344d01ef6f4f4dfc78a4bf7e",
+    "Design/AppIcon.icns": "c9ec27b86010cb1d2e486af58327692a8c816c2797aec7419ab049f81cb70926"
+  },
+  "source_sha256": {
+    "Sources/TorrentBridge/GeoIP.hpp": "92728b2ba62f7c56301ca96214b0f89050f052b3ff1f10bd7c2d628ece4195cd",
+    "Sources/TorrentBridge/TorrentBridge.mm": "72b0e449a37c06d6e38aba65a39e1ea70a6dca903e2af93b2df1b64573c58d66",
+    "Sources/TorrentBridge/include/TorrentBridge.h": "3ddab938d7d7a9a3e8416f78e895eee58aefa6208f35bcf5a7a491fb329dd146",
+    "Sources/TorrentFlow/AddTransferView.swift": "adfbedd324f4fe883772fbed48afd4673383038d5136ab545f8144823567c6cd",
+    "Sources/TorrentFlow/Engine.swift": "ff43e7c673b25c80150356423cab226f0b801071e76167d6bad16bbddc52d4b8",
+    "Sources/TorrentFlow/FileCompletionCell.swift": "886128ddc80a49ad7f6719f5d3db896c685bde3651977e4e69c9d84177ae154a",
+    "Sources/TorrentFlow/InspectorView.swift": "314d19d2b59f15db1a8d2d8230df88849d18987d405d20c63a8b86c6ff7159d5",
+    "Sources/TorrentFlow/Localization.swift": "183703bcf42846ed62861b32f32aa38dbfda959c36ba7ff4e40fc9e95f8aa3ec",
+    "Sources/TorrentFlow/MainView.swift": "b0b5a27a0a7df24df9e4643e064cf0830c76c28fd0d6d6c5855e1e9ffe26ef3f",
+    "Sources/TorrentFlow/Models.swift": "de2c9ea3be2702058deee87c23994b326e2fa4b24b98b7e898a006d3a72cd8be",
+    "Sources/TorrentFlow/PerformanceScenario.swift": "51fd438784a5589d72091a7d8b1fd07bebe172f07b939b83b547dadfe6525be1",
+    "Sources/TorrentFlow/PowerManagement.swift": "e6df18aac0b38f49db59fa8a7c31279e98b5b9146c14d7a95014f557102a506c",
+    "Sources/TorrentFlow/SettingsView.swift": "07b66488a41295aecfac9117a850ea7e0ac1489e897eb15478de6ae60471aa59",
+    "Sources/TorrentFlow/Store.swift": "8d168e6e782b0f1227cfb978840ec0f287920f6b6fa1f6a481a432b5daf45ca9",
+    "Sources/TorrentFlow/Style.swift": "b06c81e90c1cc8fd0dd596a78b43062c197215c0602f3fc54a374ee3e17ed92d",
+    "Sources/TorrentFlow/TorrentFlowApp.swift": "0963b9fbb8b3783db74a54605d123863d54efed12cee3c0d2d82a9f3ab0d6ea7",
+    "Sources/TorrentFlow/TransferSelection.swift": "a14d98f98064c17861b9258e9bb8311a9c9a6ce685e43d956c786ed948146f0d"
+  },
+  "localization_sha256": {
+    "Resources/en.lproj/Help.html": "a1596b317c739300a1ec0aa81a94842aa3f437a847e25b1cf6d579a942aa11cc",
+    "Resources/en.lproj/InfoPlist.strings": "35d3f5b489099012351a85eedd87b901f85b80a77353a0d97c59ada1ee4a25fd",
+    "Resources/en.lproj/Localizable.strings": "ff72e168e0cfa5c54b3d1ccb15b4fa3c5859dfaafb08416e363ce151ef5b7b50",
+    "Resources/ru.lproj/Help.html": "e3f674b45a4d9462c4b7db3d2e7dd39098e0574678ebab81a209be1dc20e6b1b",
+    "Resources/ru.lproj/InfoPlist.strings": "442fd8e9175f571f057ac6c05c29d84a70b0a692a147bc169bad519dc313db17",
+    "Resources/ru.lproj/Localizable.strings": "28c2c0f8db25a62b97a33364d60171ad4126c822d161798b2f834587e699e419"
+  },
+  "validation": {
+    "localization_checks": 39,
+    "power_preferences_checks": 36,
+    "rendered_views": 17,
+    "catalog_entries_per_language": 344,
+    "bridge_matches_0.2.1": true,
+    "zip_verified": true,
+    "signature_verified": true,
+    "performance_remeasured": false
+  }
+}

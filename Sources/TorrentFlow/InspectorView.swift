@@ -13,24 +13,24 @@ struct InspectorView: View {
     }
     private var header: some View {
         HStack(spacing: 18) {
-            Text("Инспектор").font(.system(size: 15, weight: .semibold))
-            Picker("Инспектор", selection: $store.inspectorTab) {
-                Text("Обзор").tag(0)
-                Text("Файлы").tag(1)
-                Text("Трекеры").tag(2)
-                Text("Пиры").tag(3)
-                Text("Логи").tag(4)
+            Text(L10n.text("Инспектор")).font(.system(size: 15, weight: .semibold))
+            Picker(L10n.text("Инспектор"), selection: $store.inspectorTab) {
+                Text(L10n.text("Обзор")).tag(0)
+                Text(L10n.text("Файлы")).tag(1)
+                Text(L10n.text("Трекеры")).tag(2)
+                Text(L10n.text("Пиры")).tag(3)
+                Text(L10n.text("Логи")).tag(4)
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .accessibilityLabel("Инспектор")
+            .accessibilityLabel(L10n.text("Инспектор"))
             .frame(width: 510)
             Spacer(minLength: 8)
             if let transfer = store.selected {
-                Text(transfer.name).font(.system(size: 12)).lineLimit(1).truncationMode(.middle).foregroundStyle(.secondary)
+                Text(transfer.displayName).font(.system(size: 12)).lineLimit(1).truncationMode(.middle).foregroundStyle(.secondary)
             }
             Button { store.inspector = false } label: { Image(systemName: "xmark").font(.system(size: 11, weight: .semibold)).frame(width: 24, height: 24) }
-                .buttonStyle(.plain).foregroundStyle(.secondary).help("Скрыть инспектор · ⌥⌘I").accessibilityLabel("Скрыть инспектор")
+                .buttonStyle(.plain).foregroundStyle(.secondary).help(L10n.text("Скрыть инспектор · ⌥⌘I")).accessibilityLabel(L10n.text("Скрыть инспектор"))
         }
         .padding(.horizontal, 18)
         .frame(height: 48)
@@ -47,7 +47,7 @@ struct InspectorView: View {
             default: InspectorOverview(store: store, transfer: transfer)
             }
         } else {
-            ContentUnavailableView("Выберите загрузку", systemImage: "info.circle", description: Text("Сведения, файлы, трекеры и пиры появятся здесь. Общие события доступны во вкладке «Логи»."))
+            ContentUnavailableView(L10n.text("Выберите загрузку"), systemImage: "info.circle", description: Text(L10n.text("Сведения, файлы, трекеры и пиры появятся здесь. Общие события доступны во вкладке «Логи».")))
         }
     }
 }
@@ -61,11 +61,11 @@ private struct InspectorOverview: View {
                 summary
                 HStack(alignment: .top, spacing: 24) {
                     Grid(alignment: .leading, horizontalSpacing: 24, verticalSpacing: 8) {
-                        metric("Выбрано", bytes(transfer.wanted))
-                        metric("Загружено", bytes(transfer.done))
-                        metric("Отдано", bytes(transfer.uploaded))
-                        metric("Рейтинг", String(format: "%.2f", transfer.ratio))
-                        metric("Пиры / Сиды", "\(transfer.peers) / \(transfer.seeds)")
+                        metric(L10n.text("Выбрано"), bytes(transfer.wanted))
+                        metric(L10n.text("Загружено"), bytes(transfer.done))
+                        metric(L10n.text("Отдано"), bytes(transfer.uploaded))
+                        metric(L10n.text("Рейтинг"), String(format: "%.2f", transfer.ratio))
+                        metric(L10n.text("Пиры / Сиды"), "\(transfer.peers) / \(transfer.seeds)")
                     }.frame(minWidth: 250, maxWidth: .infinity, alignment: .leading)
                     Divider()
                     location.frame(maxWidth: .infinity, alignment: .leading)
@@ -76,7 +76,7 @@ private struct InspectorOverview: View {
     private var summary: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline, spacing: 18) {
-                Text(transfer.name).font(.system(size: 17, weight: .semibold)).lineLimit(2).textSelection(.enabled)
+                Text(transfer.displayName).font(.system(size: 17, weight: .semibold)).lineLimit(2).textSelection(.enabled)
                 Spacer(minLength: 10)
                 Text(transfer.status).font(.callout).foregroundStyle(transfer.error.isEmpty ? Color.secondary : Color.orange).lineLimit(2)
                 Text(transfer.progress, format: .percent.precision(.fractionLength(1)))
@@ -90,13 +90,13 @@ private struct InspectorOverview: View {
     }
     private var location: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Папка загрузки").font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary)
+            Text(L10n.text("Папка загрузки")).font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary)
             HStack(spacing: 12) {
                 Text(transfer.destination).font(.callout).textSelection(.enabled).lineLimit(2).help(transfer.destination)
                 Spacer(minLength: 0)
-                Button("Показать в Finder") { store.reveal(transfer) }.controlSize(.small)
+                Button(L10n.text("Показать в Finder")) { store.reveal(transfer) }.controlSize(.small)
             }
-            Text("Инфохеш").font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary).padding(.top, 2)
+            Text(L10n.text("Инфохеш")).font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary).padding(.top, 2)
             Text(transfer.hash).font(.system(size: 11, design: .monospaced)).textSelection(.enabled).lineLimit(2)
         }
     }
@@ -114,32 +114,30 @@ private struct InspectorFiles: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("\(files.count) файлов · \(bytes(transfer.wanted)) выбрано")
+                Text(L10n.format("Файлов: %lld · выбрано %@", Int64(files.count), bytes(transfer.wanted)))
                 Spacer()
-                Text("Выберите приоритет в строке файла")
+                Text(L10n.text("Выберите приоритет в строке файла"))
             }.font(.system(size: 12)).foregroundStyle(.secondary).padding(.horizontal, 18).frame(height: 37)
             Table(files) {
-                TableColumn("Файл") { file in Text(file.path).lineLimit(1).truncationMode(.middle).help(file.path) }.width(min: 280, ideal: 560)
-                TableColumn("Размер") { file in Text(bytes(file.size)).monospacedDigit() }.width(110)
-                TableColumn("Готово") { file in
-                    if file.priority > 0 {
-                        Text(file.size > 0 ? Double(file.done) / Double(file.size) : 0, format: .percent.precision(.fractionLength(1))).monospacedDigit()
-                    } else { Text("—").foregroundStyle(.secondary) }
-                }.width(90)
-                TableColumn("Приоритет") { file in priorityPicker(file) }.width(175)
+                TableColumn(L10n.text("Файл")) { file in Text(file.path).lineLimit(1).truncationMode(.middle).help(file.path) }.width(min: 280, ideal: 560)
+                TableColumn(L10n.text("Размер")) { file in Text(bytes(file.size)).monospacedDigit() }.width(110)
+                TableColumn(L10n.text("Готово")) { file in
+                    FileCompletionCell(done: file.done, size: file.size, included: file.priority > 0)
+                }.width(110)
+                TableColumn(L10n.text("Приоритет")) { file in priorityPicker(file) }.width(175)
             }
             .tableStyle(.inset(alternatesRowBackgrounds: true))
         }
     }
     private func priorityPicker(_ file: TorrentFile) -> some View {
-        Picker("Приоритет \(file.name)", selection: Binding(
+        Picker(L10n.format("Приоритет %@", file.name), selection: Binding(
             get: { displayedPriorities[file.index] ?? file.priority },
             set: { priority in update(file.index, priority: priority) }
         )) {
             ForEach(FilePriority.allCases) { priority in Text(priority.title).tag(priority.rawValue) }
         }
         .pickerStyle(.menu).labelsHidden().controlSize(.small)
-        .accessibilityLabel("Приоритет \(file.name)")
+        .accessibilityLabel(L10n.format("Приоритет %@", file.name))
         .disabled(store.busy || pending.contains(file.index))
     }
     private func update(_ index: Int, priority: Int) {
@@ -162,17 +160,17 @@ private struct InspectorTrackers: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("Трекеров: \(trackers.count)").foregroundStyle(.secondary)
+                Text(L10n.format("Трекеров: %lld", Int64(trackers.count))).foregroundStyle(.secondary)
                 Spacer()
-                Button("Добавить трекеры…") { adding = true }.controlSize(.small).disabled(store.busy)
+                Button(L10n.text("Добавить трекеры…")) { adding = true }.controlSize(.small).disabled(store.busy)
             }.font(.system(size: 12)).padding(.horizontal, 18).frame(height: 37)
             Table(trackers) {
-                TableColumn("Адрес трекера") { tracker in Text(tracker.id).textSelection(.enabled).help(tracker.id) }
+                TableColumn(L10n.text("Адрес трекера")) { tracker in Text(tracker.id).textSelection(.enabled).help(tracker.id) }
             }
             .tableStyle(.inset(alternatesRowBackgrounds: true))
             .overlay {
                 if trackers.isEmpty {
-                    ContentUnavailableView("Трекеров нет", systemImage: "network", description: Text("Добавьте адрес трекера или используйте поиск пиров через DHT и PEX."))
+                    ContentUnavailableView(L10n.text("Трекеров нет"), systemImage: "network", description: Text(L10n.text("Добавьте адрес трекера или используйте поиск пиров через DHT и PEX.")))
                 }
             }
         }
@@ -201,20 +199,20 @@ private struct AddTrackersView: View {
     }
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            PanelTitle(title: "Добавить трекеры", subtitle: transfer.name)
-            Text("Вставьте по одному адресу на строку. Поддерживаются HTTP, HTTPS и UDP.")
+            PanelTitle(title: L10n.text("Добавить трекеры"), subtitle: transfer.displayName)
+            Text(L10n.text("Вставьте по одному адресу на строку. Поддерживаются HTTP, HTTPS и UDP."))
                 .font(.callout).foregroundStyle(.secondary)
             TextEditor(text: $text)
                 .font(.system(size: 13, design: .monospaced))
                 .frame(height: 170)
                 .border(Color(nsColor: .separatorColor))
                 .disabled(submitting)
-                .accessibilityLabel("Адреса трекеров, по одному на строку")
+                .accessibilityLabel(L10n.text("Адреса трекеров, по одному на строку"))
             validationMessage.frame(height: 32, alignment: .leading)
             HStack {
                 Spacer()
-                Button("Отмена") { dismiss() }.keyboardShortcut(.cancelAction).disabled(submitting)
-                Button(submitting ? "Добавление…" : "Добавить") { submit() }
+                Button(L10n.text("Отмена")) { dismiss() }.keyboardShortcut(.cancelAction).disabled(submitting)
+                Button(submitting ? L10n.text("Добавление…") : L10n.text("Добавить")) { submit() }
                     .buttonStyle(.glassProminent).keyboardShortcut(.defaultAction)
                     .disabled(submitting || store.busy || lines.isEmpty || invalidLine != nil || urls.isEmpty)
             }
@@ -224,13 +222,13 @@ private struct AddTrackersView: View {
     }
     @ViewBuilder private var validationMessage: some View {
         if let invalidLine {
-            Text("Некорректный адрес в строке \(invalidLine). Проверьте протокол, имя сервера и порт.").font(.system(size: 12)).foregroundStyle(.orange)
+            Text(L10n.format("Некорректный адрес в строке %lld. Проверьте протокол, имя сервера и порт.", Int64(invalidLine))).font(.system(size: 12)).foregroundStyle(.orange)
         } else if let submissionError {
             Text(submissionError).font(.system(size: 12)).foregroundStyle(.red).lineLimit(2)
         } else if !lines.isEmpty && urls.isEmpty {
-            Text("Все указанные трекеры уже есть в списке.").font(.system(size: 12)).foregroundStyle(.secondary)
+            Text(L10n.text("Все указанные трекеры уже есть в списке.")).font(.system(size: 12)).foregroundStyle(.secondary)
         } else {
-            Text(urls.isEmpty ? "" : "Будет добавлено адресов: \(urls.count)").font(.system(size: 12)).foregroundStyle(.secondary)
+            Text(urls.isEmpty ? "" : L10n.format("Будет добавлено адресов: %lld", Int64(urls.count))).font(.system(size: 12)).foregroundStyle(.secondary)
         }
     }
     private func submit() {
@@ -240,7 +238,7 @@ private struct AddTrackersView: View {
             let success = await store.addTrackers(transfer.id, urls: values)
             submitting = false
             if success { dismiss() }
-            else { submissionError = store.editorError ?? "Не удалось добавить трекеры. Повторите попытку." }
+            else { submissionError = store.editorError ?? L10n.text("Не удалось добавить трекеры. Повторите попытку.") }
         }
     }
     private func validTracker(_ value: String) -> Bool {
@@ -260,35 +258,35 @@ private struct InspectorPeers: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("Подключено пиров: \(peers.count)")
+                Text(L10n.format("Подключено пиров: %lld", Int64(peers.count)))
                 Spacer()
-                Text("Страна определяется по IP.")
+                Text(L10n.text("Страна определяется по IP."))
                 Link("IP Geolocation by DB-IP", destination: URL(string: "https://db-ip.com")!)
             }.font(.system(size: 11)).foregroundStyle(.secondary).padding(.horizontal, 18).frame(height: 31)
             Table(peers, selection: $selection) {
-                TableColumn("Страна") { peer in
+                TableColumn(L10n.text("Страна")) { peer in
                     Text(PeerCountry.label(peer.countryCode)).lineLimit(1).help(PeerCountry.name(peer.countryCode))
                 }.width(min: 120, ideal: 160)
-                TableColumn("IP-адрес") { peer in Text(peer.address).font(.system(size: 12, design: .monospaced)).lineLimit(1).help(peer.address) }.width(min: 170, ideal: 210)
-                TableColumn("Клиент") { peer in
+                TableColumn(L10n.text("IP-адрес")) { peer in Text(peer.address).font(.system(size: 12, design: .monospaced)).lineLimit(1).help(peer.address) }.width(min: 170, ideal: 210)
+                TableColumn(L10n.text("Клиент")) { peer in
                     HStack(spacing: 6) {
-                        if peer.seed { Image(systemName: "checkmark.circle.fill").foregroundStyle(.green).help("Сид: все части доступны") }
-                        Text(peer.client.isEmpty ? "Не сообщил" : peer.client).lineLimit(1).help(peer.client)
+                        if peer.seed { Image(systemName: "checkmark.circle.fill").foregroundStyle(.green).help(L10n.text("Сид: все части доступны")) }
+                        Text(peer.displayClient).lineLimit(1).help(peer.client)
                     }
                 }.width(min: 160, ideal: 230)
-                TableColumn("Готово") { peer in Text(peer.progress, format: .percent.precision(.fractionLength(1))).monospacedDigit() }.width(85)
-                TableColumn("Загрузка") { peer in Text(rate(peer.downloadRate)).monospacedDigit() }.width(105)
-                TableColumn("Отдача") { peer in Text(rate(peer.uploadRate)).monospacedDigit() }.width(105)
+                TableColumn(L10n.text("Готово")) { peer in Text(peer.progress, format: .percent.precision(.fractionLength(1))).monospacedDigit() }.width(85)
+                TableColumn(L10n.text("Загрузка")) { peer in Text(rate(peer.downloadRate)).monospacedDigit() }.width(105)
+                TableColumn(L10n.text("Отдача")) { peer in Text(rate(peer.uploadRate)).monospacedDigit() }.width(105)
             }
             .tableStyle(.inset(alternatesRowBackgrounds: true))
             .contextMenu(forSelectionType: String.self) { identifiers in
                 if let id = identifiers.first, let peer = peers.first(where: { $0.id == id }) {
-                    Button("Скопировать IP-адрес") { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(peer.address, forType: .string) }
+                    Button(L10n.text("Скопировать IP-адрес")) { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(peer.address, forType: .string) }
                 }
             }
             .overlay {
                 if peers.isEmpty {
-                    ContentUnavailableView("Нет подключённых пиров", systemImage: "person.2", description: Text("Адреса, страны и клиенты появятся после подключения."))
+                    ContentUnavailableView(L10n.text("Нет подключённых пиров"), systemImage: "person.2", description: Text(L10n.text("Адреса, страны и клиенты появятся после подключения.")))
                 }
             }
         }
@@ -296,14 +294,10 @@ private struct InspectorPeers: View {
 }
 
 private enum PeerCountry {
-    private static let countries: [String: String] = {
-        let locale = Locale(identifier: "ru_RU")
-        return Dictionary(uniqueKeysWithValues: Locale.Region.isoRegions.map { region in let code = region.identifier; return (code, locale.localizedString(forRegionCode: code) ?? code) })
-    }()
     static func name(_ code: String) -> String {
-        if code == "LOCAL" || code == "LAN" { return "Локальная сеть" }
-        guard !code.isEmpty else { return "Не определена" }
-        return countries[code.uppercased()] ?? code
+        if code == "LOCAL" || code == "LAN" { return L10n.text("Локальная сеть") }
+        guard !code.isEmpty else { return L10n.text("Не определена") }
+        return L10n.locale.localizedString(forRegionCode: code.uppercased()) ?? code
     }
     static func label(_ code: String) -> String {
         let scalars = code.uppercased().unicodeScalars
@@ -322,36 +316,36 @@ private struct InspectorLogs: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 16) {
-                Text(store.selected == nil ? "События всех загрузок и приложения" : "События выбранной загрузки и приложения").foregroundStyle(.secondary)
+                Text(store.selected == nil ? L10n.text("События всех загрузок и приложения") : L10n.text("События выбранной загрузки и приложения")).foregroundStyle(.secondary)
                 Spacer()
-                Toggle("Только ошибки", isOn: $errorsOnly).toggleStyle(.checkbox)
-                Button("Очистить") { store.clearLogs(); selection = nil }.controlSize(.small).disabled(store.logs.isEmpty)
+                Toggle(L10n.text("Только ошибки"), isOn: $errorsOnly).toggleStyle(.checkbox)
+                Button(L10n.text("Очистить")) { store.clearLogs(); selection = nil }.controlSize(.small).disabled(store.logs.isEmpty)
             }.font(.system(size: 12)).padding(.horizontal, 18).frame(height: 36)
             Table(entries, selection: $selection) {
-                TableColumn("Время") { entry in
+                TableColumn(L10n.text("Время")) { entry in
                     Text(Date(timeIntervalSince1970: entry.timestamp), format: .dateTime.hour().minute().second()).monospacedDigit()
                 }.width(95)
-                TableColumn("Уровень") { entry in Label(levelTitle(entry.level), systemImage: levelSymbol(entry.level)).foregroundStyle(levelColor(entry.level)) }.width(145)
-                TableColumn("Сообщение") { entry in Text(entry.message).lineLimit(1).help(entry.message) }
+                TableColumn(L10n.text("Уровень")) { entry in Label(levelTitle(entry.level), systemImage: levelSymbol(entry.level)).foregroundStyle(levelColor(entry.level)) }.width(145)
+                TableColumn(L10n.text("Сообщение")) { entry in Text(entry.displayMessage).lineLimit(1).help(entry.displayMessage) }
             }
             .tableStyle(.inset(alternatesRowBackgrounds: true))
             .overlay {
                 if entries.isEmpty {
-                    ContentUnavailableView(errorsOnly ? "Ошибок нет" : "Сообщений пока нет", systemImage: errorsOnly ? "checkmark.circle" : "list.bullet.rectangle")
+                    ContentUnavailableView(errorsOnly ? L10n.text("Ошибок нет") : L10n.text("Сообщений пока нет"), systemImage: errorsOnly ? "checkmark.circle" : "list.bullet.rectangle")
                 }
             }
             if let selected {
                 Divider()
                 HStack(alignment: .top, spacing: 10) {
                     Image(systemName: levelSymbol(selected.level)).foregroundStyle(levelColor(selected.level))
-                    Text(selected.message).font(.system(size: 12, design: .monospaced)).textSelection(.enabled).lineLimit(3).help(selected.message)
+                    Text(selected.displayMessage).font(.system(size: 12, design: .monospaced)).textSelection(.enabled).lineLimit(3).help(selected.displayMessage)
                     Spacer(minLength: 0)
-                    Button { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(selected.message, forType: .string) } label: { Image(systemName: "doc.on.doc") }.buttonStyle(.borderless).help("Скопировать сообщение").accessibilityLabel("Скопировать сообщение")
+                    Button { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(selected.displayMessage, forType: .string) } label: { Image(systemName: "doc.on.doc") }.buttonStyle(.borderless).help(L10n.text("Скопировать сообщение")).accessibilityLabel(L10n.text("Скопировать сообщение"))
                 }.padding(.horizontal, 18).padding(.vertical, 10).frame(maxWidth: .infinity, alignment: .leading).background(.quaternary.opacity(0.3))
             }
         }
     }
-    private func levelTitle(_ level: String) -> String { level == "error" ? "Ошибка" : level == "warning" ? "Предупреждение" : "Информация" }
+    private func levelTitle(_ level: String) -> String { level == "error" ? L10n.text("Ошибка") : level == "warning" ? L10n.text("Предупреждение") : L10n.text("Информация") }
     private func levelSymbol(_ level: String) -> String { level == "error" ? "xmark.octagon.fill" : level == "warning" ? "exclamationmark.triangle.fill" : "info.circle" }
     private func levelColor(_ level: String) -> Color { level == "error" ? .red : level == "warning" ? .orange : .secondary }
 }

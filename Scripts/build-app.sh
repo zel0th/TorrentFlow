@@ -18,6 +18,11 @@ cp -X "$ROOT/Info.plist" "$APP/Contents/Info.plist"
 cp -X "$ROOT/Design/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
 cp -X /etc/ssl/cert.pem "$APP/Contents/Resources/cacert.pem"
 cp -X "$ROOT/Documentation/Help.html" "$APP/Contents/Resources/Help.html"
+# Resolve these standard bundles explicitly for live app-language changes.
+for language in ru en; do
+    [ -f "$ROOT/Resources/$language.lproj/Localizable.strings" ] || { printf 'Missing localization: %s\n' "$language" >&2; exit 1; }
+    plutil -lint "$ROOT/Resources/$language.lproj/Localizable.strings"
+done
 if [ -d "$ROOT/Resources" ]; then ditto --norsrc --noextattr "$ROOT/Resources" "$APP/Contents/Resources"; fi
 cp -X "$ROOT/Documentation/Licenses/"* "$APP/Contents/Resources/Licenses/"
 codesign --force --sign - "$APP"

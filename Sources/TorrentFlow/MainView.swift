@@ -2,8 +2,10 @@ import SwiftUI
 import AppKit
 
 struct MainView: View {
+    @Environment(\.locale) private var locale
     @ObservedObject var store: AppStore
     var body: some View {
+        let _ = locale
         VStack(spacing: 0) {
             TransferFilterBar(store: store)
             if store.inspector {
@@ -22,31 +24,31 @@ struct MainView: View {
         .navigationSubtitle(store.filter.title)
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
-                Button(action: store.openFiles) { Label("Открыть торрент", systemImage: "plus") }.help("Открыть торрент · ⌘O")
-                Button { store.showMagnet = true } label: { Label("Magnet-ссылка", systemImage: "link") }.help("Открыть magnet-ссылку · ⌘L")
+                Button(action: store.openFiles) { Label(L10n.text("Открыть торрент"), systemImage: "plus") }.help(L10n.text("Открыть торрент · ⌘O"))
+                Button { store.showMagnet = true } label: { Label(L10n.text("Magnet-ссылка"), systemImage: "link") }.help(L10n.text("Открыть magnet-ссылку · ⌘L"))
                 Divider()
-                Button { if let t = store.selected { store.command(t.id, t.paused ? "resume" : "pause") } } label: { Label(store.selected?.paused == true ? "Возобновить" : "Пауза", systemImage: store.selected?.paused == true ? "play.fill" : "pause.fill") }.disabled(store.selected == nil)
+                Button { if let t = store.selected { store.command(t.id, t.paused ? "resume" : "pause") } } label: { Label(store.selected?.paused == true ? L10n.text("Возобновить") : L10n.text("Пауза"), systemImage: store.selected?.paused == true ? "play.fill" : "pause.fill") }.disabled(store.selected == nil)
                 Menu {
                     if let transfer = store.selected {
-                        Button("Удалить из списка…", role: .destructive) { store.remove(transfer.id) }.disabled(store.busy)
-                        Button("Удалить вместе с файлами…", role: .destructive) { store.requestRemoveWithFiles(transfer.id) }.disabled(store.busy)
+                        Button(L10n.text("Удалить из списка…"), role: .destructive) { store.remove(transfer.id) }.disabled(store.busy)
+                        Button(L10n.text("Удалить вместе с файлами…"), role: .destructive) { store.requestRemoveWithFiles(transfer.id) }.disabled(store.busy)
                     }
-                } label: { Label("Удалить", systemImage: "trash") }.disabled(store.selected == nil || store.busy)
-                Button { store.inspector.toggle() } label: { Label("Инспектор", systemImage: "rectangle.bottomthird.inset.filled") }.help("Показать инспектор · ⌥⌘I")
+                } label: { Label(L10n.text("Удалить"), systemImage: "trash") }.disabled(store.selected == nil || store.busy)
+                Button { store.inspector.toggle() } label: { Label(L10n.text("Инспектор"), systemImage: "rectangle.bottomthird.inset.filled") }.help(L10n.text("Показать инспектор · ⌥⌘I"))
             }
         }
-        .searchable(text: $store.search, placement: .toolbar, prompt: "Имя загрузки")
+        .searchable(text: $store.search, placement: .toolbar, prompt: L10n.text("Имя загрузки"))
         .frame(minWidth: 1060, minHeight: 650)
         .preferredColorScheme(store.preferences.appearance == "light" ? .light : store.preferences.appearance == "dark" ? .dark : nil)
         .sheet(isPresented: $store.showMagnet) { MagnetView(store: store) }
         .sheet(isPresented: Binding(get: { store.draftID != nil }, set: { if !$0 { store.finishDraft(cancel: true) } })) { AddTransferView(store: store).id(store.draftID) }
-        .alert("Не удалось выполнить операцию", isPresented: Binding(get: { store.error != nil }, set: { if !$0 { store.error = nil } })) {
-            Button("Понятно", role: .cancel) { store.error = nil }
+        .alert(L10n.text("Не удалось выполнить операцию"), isPresented: Binding(get: { store.error != nil }, set: { if !$0 { store.error = nil } })) {
+            Button(L10n.text("Понятно"), role: .cancel) { store.error = nil }
         } message: { Text(store.error ?? "") }
-        .confirmationDialog(store.removeFiles ? "Удалить загрузку вместе с файлами?" : "Удалить загрузку из списка?", isPresented: Binding(get: { store.removeID != nil }, set: { if !$0 { store.removeID = nil } }), titleVisibility: .visible) {
-            Button(store.removeFiles ? "Переместить файлы в Корзину" : "Удалить из списка", role: .destructive) { store.confirmRemoval() }.disabled(store.busy)
-            Button("Отмена", role: .cancel) { store.removeID = nil }
-        } message: { Text(store.removeFiles ? "Файлы этой загрузки будут перемещены в Корзину, а задача исчезнет из списка. Файлы можно восстановить из Корзины." : "Загруженные файлы останутся на диске.") }
+        .confirmationDialog(store.removeFiles ? L10n.text("Удалить загрузку вместе с файлами?") : L10n.text("Удалить загрузку из списка?"), isPresented: Binding(get: { store.removeID != nil }, set: { if !$0 { store.removeID = nil } }), titleVisibility: .visible) {
+            Button(store.removeFiles ? L10n.text("Переместить файлы в Корзину") : L10n.text("Удалить из списка"), role: .destructive) { store.confirmRemoval() }.disabled(store.busy)
+            Button(L10n.text("Отмена"), role: .cancel) { store.removeID = nil }
+        } message: { Text(store.removeFiles ? L10n.text("Файлы этой загрузки будут перемещены в Корзину, а задача исчезнет из списка. Файлы можно восстановить из Корзины.") : L10n.text("Загруженные файлы останутся на диске.")) }
         .dropDestination(for: URL.self) { urls, _ in
             let accepted = urls.filter { $0.scheme == "magnet" || $0.pathExtension.lowercased() == "torrent" }
             store.importSources(accepted.map { $0.isFileURL ? $0.path : $0.absoluteString }); return !accepted.isEmpty
@@ -57,13 +59,13 @@ struct MainView: View {
         Group {
             if store.downloads.isEmpty {
                 ContentUnavailableView {
-                    Label("Готов к загрузкам", systemImage: "arrow.down.circle")
+                    Label(L10n.text("Готов к загрузкам"), systemImage: "arrow.down.circle")
                 } description: {
-                    Text("Откройте .torrent или вставьте magnet-ссылку.\nВыберите папку, файлы и приоритеты перед стартом.")
+                    Text(L10n.text("Откройте .torrent или вставьте magnet-ссылку.\nВыберите папку, файлы и приоритеты перед стартом."))
                 } actions: {
                     HStack {
-                        Button("Открыть торрент…", action: store.openFiles).buttonStyle(.glassProminent)
-                        Button("Magnet-ссылка…") { store.showMagnet = true }
+                        Button(L10n.text("Открыть торрент…"), action: store.openFiles).buttonStyle(.glassProminent)
+                        Button(L10n.text("Magnet-ссылка…")) { store.showMagnet = true }
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -78,7 +80,7 @@ struct MainView: View {
                 .scrollContentBackground(.hidden)
                 .overlay {
                     if store.visible.isEmpty {
-                        ContentUnavailableView("Ничего не найдено", systemImage: "line.3.horizontal.decrease", description: Text("Измените фильтр или поисковый запрос."))
+                        ContentUnavailableView(L10n.text("Ничего не найдено"), systemImage: "line.3.horizontal.decrease", description: Text(L10n.text("Измените фильтр или поисковый запрос.")))
                     }
                 }
             }
@@ -86,16 +88,16 @@ struct MainView: View {
         .background(Color(nsColor: .textBackgroundColor))
     }
     @ViewBuilder private func transferActions(_ transfer: Transfer) -> some View {
-        Button(transfer.paused ? "Возобновить" : "Приостановить") { store.command(transfer.id, transfer.paused ? "resume" : "pause") }
-        Button("Показать в Finder") { store.reveal(transfer) }
-        Button("Проверить файлы") { store.command(transfer.id, "verify") }
+        Button(transfer.paused ? L10n.text("Возобновить") : L10n.text("Приостановить")) { store.command(transfer.id, transfer.paused ? "resume" : "pause") }
+        Button(L10n.text("Показать в Finder")) { store.reveal(transfer) }
+        Button(L10n.text("Проверить файлы")) { store.command(transfer.id, "verify") }
         Divider()
-        Button("Удалить из списка…", role: .destructive) { store.remove(transfer.id) }.disabled(store.busy)
-        Button("Удалить вместе с файлами…", role: .destructive) { store.requestRemoveWithFiles(transfer.id) }.disabled(store.busy)
+        Button(L10n.text("Удалить из списка…"), role: .destructive) { store.remove(transfer.id) }.disabled(store.busy)
+        Button(L10n.text("Удалить вместе с файлами…"), role: .destructive) { store.requestRemoveWithFiles(transfer.id) }.disabled(store.busy)
     }
     private var statusBar: some View {
         HStack(spacing: 18) {
-            Text("\(store.visible.count) из \(store.downloads.count) загрузок")
+            Text(L10n.format("%lld из %lld загрузок", Int64(store.visible.count), Int64(store.downloads.count)))
                 .foregroundStyle(.secondary)
             Divider().frame(height: 14)
             Label(rate(store.downloadRate), systemImage: "arrow.down").foregroundStyle(FlowStyle.accent)
@@ -103,11 +105,11 @@ struct MainView: View {
             Spacer(minLength: 8)
             Text("libtorrent \(TorrentEngine.version)").foregroundStyle(.secondary)
             Button { store.preferences.alternate.toggle() } label: {
-                Label(store.preferences.alternate ? "Тихий режим включён" : "Тихий режим", systemImage: "tortoise")
+                Label(store.preferences.alternate ? L10n.text("Тихий режим включён") : L10n.text("Тихий режим"), systemImage: "tortoise")
             }
             .buttonStyle(.borderless)
             .tint(store.preferences.alternate ? .orange : .secondary)
-            .help("Ограничить скорость до значений тихого режима")
+            .help(L10n.text("Ограничить скорость до значений тихого режима"))
         }
         .font(.system(size: 12))
         .monospacedDigit()
@@ -118,8 +120,10 @@ struct MainView: View {
 }
 
 private struct TransferFilterBar: View {
+    @Environment(\.locale) private var locale
     @ObservedObject var store: AppStore
     var body: some View {
+        let _ = locale
         HStack(spacing: 6) {
             ForEach(TransferFilter.allCases) { item in
                 filterButton(item)
@@ -130,7 +134,7 @@ private struct TransferFilterBar: View {
         .padding(.vertical, 10)
         .background(Color(nsColor: .windowBackgroundColor))
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Фильтры загрузок")
+        .accessibilityLabel(L10n.text("Фильтры загрузок"))
     }
     private func filterButton(_ item: TransferFilter) -> some View {
         let count = store.downloads.filter { item.matches($0) }.count
@@ -155,15 +159,17 @@ private struct TransferFilterBar: View {
                 Capsule().fill(FlowStyle.accent.opacity(0.14))
             }
         }
-        .accessibilityLabel("\(item.title), \(count) загрузок")
+        .accessibilityLabel(L10n.format("%@, %lld загрузок", item.title, Int64(count)))
         .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
 }
 struct TransferRow: View {
+    @Environment(\.locale) private var locale
     let transfer: Transfer
     private var color: Color { transfer.phase == "error" ? .orange : transfer.paused ? .secondary : transfer.complete ? .green : FlowStyle.accent }
     var body: some View {
+        let _ = locale
         HStack(alignment: .top, spacing: 14) {
             Image(systemName: transfer.complete ? "checkmark.circle.fill" : transfer.paused ? "pause.circle.fill" : "arrow.down.circle.fill")
                 .font(.system(size: 32, weight: .light)).symbolRenderingMode(.hierarchical).foregroundStyle(color).frame(width: 38).padding(.top, 6)
@@ -175,17 +181,17 @@ struct TransferRow: View {
                 }
                 ProgressView(value: transfer.progress).tint(color)
                 HStack(spacing: 6) {
-                    Text("\(bytes(transfer.done)) из \(bytes(transfer.wanted))")
+                    Text(L10n.format("%@ из %@", bytes(transfer.done), bytes(transfer.wanted)))
                     Text("·")
                     Text(transfer.status).lineLimit(1)
                     Spacer()
-                    if transfer.phase == "downloading" && transfer.downloadRate > 0 { Text("Осталось \(transfer.eta)") }
+                    if transfer.phase == "downloading" && transfer.downloadRate > 0 { Text(L10n.format("Осталось %@", transfer.eta)) }
                 }.font(.system(size: 12)).foregroundStyle(.secondary)
                 HStack(spacing: 16) {
                     Label(rate(transfer.downloadRate), systemImage: "arrow.down").foregroundStyle(color)
                     Label(rate(transfer.uploadRate), systemImage: "arrow.up").foregroundStyle(transfer.uploadRate > 0 ? Color.green : .secondary)
                     Spacer()
-                    Text("Пиры: \(transfer.peers) · Сиды: \(transfer.seeds)")
+                    Text(L10n.format("Пиры: %lld · Сиды: %lld", Int64(transfer.peers), Int64(transfer.seeds)))
                 }.font(.system(size: 12)).monospacedDigit().foregroundStyle(.secondary)
             }
         }.padding(.vertical, 13).padding(.horizontal, 4)

@@ -2,6 +2,7 @@ import SwiftUI
 import AppKit
 
 struct AddTransferView: View {
+    @Environment(\.locale) private var locale
     @ObservedObject var store: AppStore
     @ViewState private var path = ""
     @ViewState private var priorities: [Int: Int] = [:]
@@ -26,54 +27,55 @@ struct AddTransferView: View {
         for file in selectable {
             let name = names[file.index] ?? file.name
             if name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                return "У файла «\(file.name)» не задано имя."
+                return L10n.format("У файла «%@» не задано имя.", file.name)
             }
             if name == "." || name == ".." || name.contains("/") || name.contains(":") || name.unicodeScalars.contains(where: { $0.value == 0 }) {
-                return "Имя файла «\(file.name)» не должно быть «.» или «..» и содержать /, : или нулевой символ."
+                return L10n.format("Имя файла «%@» не должно быть «.» или «..» и содержать /, : или нулевой символ.", file.name)
             }
             let parent = (file.path as NSString).deletingLastPathComponent
             let fullPath = parent.isEmpty ? name : parent + "/" + name
             let key = fullPath.precomposedStringWithCanonicalMapping.folding(options: [.caseInsensitive], locale: Locale(identifier: "en_US_POSIX"))
             if let other = destinations[key] {
-                return "Файлы «\(other.name)» и «\(file.name)» получат одинаковый путь. Измените одно из имён."
+                return L10n.format("Файлы «%@» и «%@» получат одинаковый путь. Измените одно из имён.", other.name, file.name)
             }
             destinations[key] = file
         }
         return nil
     }
     var body: some View {
+        let _ = locale
         VStack(spacing: 0) {
             HStack(spacing: 16) {
                 Image(systemName: "arrow.down.document.fill").font(.system(size: 34)).foregroundStyle(FlowStyle.accent)
-                PanelTitle(title: "Добавить загрузку", subtitle: draft?.name ?? "Подготовка торрента…")
+                PanelTitle(title: L10n.text("Добавить загрузку"), subtitle: draft?.displayName ?? L10n.text("Подготовка торрента…"))
             }.padding(24).flowChrome()
             VStack(alignment: .leading, spacing: 15) {
                 HStack(spacing: 14) {
                     Image(systemName: "folder.fill").foregroundStyle(FlowStyle.accent).font(.title2)
                     VStack(alignment: .leading, spacing: 5) {
-                        Text("Сохранить в").font(.system(size: 12)).foregroundStyle(.secondary)
+                        Text(L10n.text("Сохранить в")).font(.system(size: 12)).foregroundStyle(.secondary)
                         Text(path).lineLimit(1).truncationMode(.middle).help(path).textSelection(.enabled)
                     }
                     Spacer(minLength: 8)
-                    Button("Выбрать…") { store.chooseFolder(path) { path = $0; updateSpace() } }
+                    Button(L10n.text("Выбрать…")) { store.chooseFolder(path) { path = $0; updateSpace() } }
                 }.padding(14).background(Color(nsColor: .controlBackgroundColor), in: .rect(cornerRadius: 12))
                 HStack {
-                    Text("Содержимое торрента").font(.system(size: 15, weight: .semibold))
+                    Text(L10n.text("Содержимое торрента")).font(.system(size: 15, weight: .semibold))
                     Spacer()
-                    TextField("Найти файл", text: $search).textFieldStyle(.roundedBorder).frame(width: 225)
+                    TextField(L10n.text("Найти файл"), text: $search).textFieldStyle(.roundedBorder).frame(width: 225)
                 }
                 HStack(spacing: 12) {
-                    Button("Выбрать все") { setAll(4) }.disabled(!hasMetadata)
-                    Button("Снять выбор") { setAll(0) }.disabled(!hasMetadata)
-                    Menu("Приоритет для всех") { ForEach(FilePriority.allCases) { p in Button(p.title) { setAll(p.rawValue) } } }.disabled(!hasMetadata)
+                    Button(L10n.text("Выбрать все")) { setAll(4) }.disabled(!hasMetadata)
+                    Button(L10n.text("Снять выбор")) { setAll(0) }.disabled(!hasMetadata)
+                    Menu(L10n.text("Приоритет для всех")) { ForEach(FilePriority.allCases) { p in Button(p.title) { setAll(p.rawValue) } } }.disabled(!hasMetadata)
                     Spacer()
-                    Text("\(selected.count) из \(selectable.count) файлов").foregroundStyle(.secondary)
+                    Text(L10n.format("%lld из %lld файлов", Int64(selected.count), Int64(selectable.count))).foregroundStyle(.secondary)
                 }.controlSize(.regular)
                 VStack(spacing: 0) {
                     HStack {
-                        Text("Файл"); Spacer()
-                        Text("Размер").frame(width: 100, alignment: .trailing)
-                        Text("Приоритет").frame(width: 135, alignment: .trailing)
+                        Text(L10n.text("Файл")); Spacer()
+                        Text(L10n.text("Размер")).frame(width: 100, alignment: .trailing)
+                        Text(L10n.text("Приоритет")).frame(width: 135, alignment: .trailing)
                     }.font(.system(size: 12, weight: .medium)).foregroundStyle(.secondary).padding(.horizontal, 14).padding(.vertical, 10).background(.quaternary.opacity(0.35))
                     Divider()
                     if hasMetadata {
@@ -82,12 +84,12 @@ struct AddTransferView: View {
                                 ForEach(tree) { node in FileTreeRow(node: node, priorities: $priorities, depth: 0, renameNames: $names) }
                             }.padding(8)
                         }
-                        .overlay { if tree.isEmpty { ContentUnavailableView.search(text: search) } }
+                        .overlay { if tree.isEmpty { ContentUnavailableView(L10n.text("Файлы не найдены"), systemImage: "doc.text.magnifyingglass", description: Text(L10n.text("Измените поисковый запрос."))) } }
                     } else {
                         VStack(spacing: 16) {
                             ProgressView().controlSize(.large)
-                            Text("Получаем список файлов magnet-ссылки").font(.headline)
-                            Text("После получения метаданных выберите файлы и приоритеты.\nЗагрузка содержимого начнётся после подтверждения.")
+                            Text(L10n.text("Получаем список файлов magnet-ссылки")).font(.headline)
+                            Text(L10n.text("После получения метаданных выберите файлы и приоритеты.\nЗагрузка содержимого начнётся после подтверждения."))
                                 .foregroundStyle(.secondary).multilineTextAlignment(.center)
                             if let error = draft?.error, !error.isEmpty { Text(error).foregroundStyle(.red) }
                         }.frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -95,29 +97,29 @@ struct AddTransferView: View {
                 }.background(Color(nsColor: .textBackgroundColor), in: .rect(cornerRadius: 12)).clipShape(.rect(cornerRadius: 12))
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("К загрузке: \(bytes(selectedSize))").fontWeight(.medium)
-                        Text(free.map { "Свободно: \(bytes($0))" } ?? "Свободное место недоступно")
+                        Text(L10n.format("К загрузке: %@", bytes(selectedSize))).fontWeight(.medium)
+                        Text(free.map { L10n.format("Свободно: %@", bytes($0)) } ?? L10n.text("Свободное место недоступно"))
                             .font(.system(size: 12)).foregroundStyle(enoughSpace ? Color.secondary : .red)
                     }
                     Spacer()
-                    Toggle("Начать загрузку сразу", isOn: $start).toggleStyle(.checkbox)
+                    Toggle(L10n.text("Начать загрузку сразу"), isOn: $start).toggleStyle(.checkbox)
                 }
                 if !enoughSpace {
-                    Text("Для полной загрузки может не хватить места. Существующие файлы будут проверены; при нехватке места задача остановится с ошибкой.")
+                    Text(L10n.text("Для полной загрузки может не хватить места. Существующие файлы будут проверены; при нехватке места задача остановится с ошибкой."))
                         .foregroundStyle(.orange).font(.callout).fixedSize(horizontal: false, vertical: true)
                 }
                 if let message = renameError ?? submissionError {
                     Label(message, systemImage: "exclamationmark.circle.fill")
                         .font(.callout).foregroundStyle(.red).lineLimit(2).help(message)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .accessibilityLabel("Ошибка: " + message)
+                        .accessibilityLabel(L10n.format("Ошибка: %@", message))
                 }
             }.padding(22).disabled(store.busy)
             HStack(spacing: 12) {
-                Text("Карандаш рядом с файлом позволяет изменить его имя.").font(.system(size: 12)).foregroundStyle(.secondary)
+                Text(L10n.text("Карандаш рядом с файлом позволяет изменить его имя.")).font(.system(size: 12)).foregroundStyle(.secondary)
                 Spacer()
-                Button("Отмена") { store.finishDraft(cancel: true) }.keyboardShortcut(.cancelAction).disabled(store.busy)
-                Button(start ? "Начать загрузку" : "Добавить на паузе") {
+                Button(L10n.text("Отмена")) { store.finishDraft(cancel: true) }.keyboardShortcut(.cancelAction).disabled(store.busy)
+                Button(start ? L10n.text("Начать загрузку") : L10n.text("Добавить на паузе")) {
                     let values = files.map { Int32($0.selectable ? (priorities[$0.index] ?? 4) : 0) }
                     let chosenNames = names
                     let chosenPath = path
@@ -127,7 +129,7 @@ struct AddTransferView: View {
                         let succeeded = await store.commit(path: chosenPath, priorities: values, start: chosenStart, names: chosenNames)
                         if !succeeded {
                             // Keep commit errors in this sheet; a parent alert may be behind the modal.
-                            submissionError = store.editorError ?? "Не удалось добавить загрузку. Проверьте папку и имена файлов."
+                            submissionError = store.editorError ?? L10n.text("Не удалось добавить загрузку. Проверьте папку и имена файлов.")
                         }
                     }
                 }.buttonStyle(.glassProminent).tint(FlowStyle.accent).keyboardShortcut(.defaultAction)
@@ -150,6 +152,7 @@ struct AddTransferView: View {
 }
 
 struct FileTreeRow: View {
+    @Environment(\.locale) private var locale
     let node: FileNode
     @Binding var priorities: [Int: Int]
     var depth: Int
@@ -158,7 +161,7 @@ struct FileTreeRow: View {
     @ViewState private var expanded = true
     private var values: [Int] { node.indices.map { priorities[$0] ?? 4 } }
     private var checkboxState: Int { values.allSatisfy { $0 == 0 } ? 0 : values.allSatisfy { $0 > 0 } ? 2 : 1 }
-    private var title: String { Set(values).count == 1 ? (FilePriority(rawValue: values.first ?? 4)?.title ?? "Обычный") : "Разные" }
+    private var title: String { Set(values).count == 1 ? (FilePriority(rawValue: values.first ?? 4)?.title ?? L10n.text("Обычный")) : L10n.text("Разные") }
     private var fileIndex: Int? { node.children == nil && node.indices.count == 1 ? node.indices.first : nil }
     private var displayedName: String { fileIndex.flatMap { renameNames?.wrappedValue[$0] } ?? node.name }
     private var renamed: Bool { displayedName != node.name }
@@ -176,24 +179,24 @@ struct FileTreeRow: View {
                     RenameFileField(name: nameBinding, originalName: node.name) { editingName = false }
                         .frame(minWidth: 55, maxWidth: .infinity).frame(height: 24)
                 } else {
-                    Text(displayedName.isEmpty ? "Имя не задано" : displayedName)
+                    Text(displayedName.isEmpty ? L10n.text("Имя не задано") : displayedName)
                         .foregroundStyle(displayedName.isEmpty ? Color.red : Color.primary)
                         .font(.system(size: 13)).lineLimit(1).truncationMode(.middle)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .help(renamed ? "Исходное имя: \(node.name)\nНовое имя: \(displayedName)" : node.id)
+                        .help(renamed ? L10n.format("Исходное имя: %@\nНовое имя: %@", node.name, displayedName) : node.id)
                         .onTapGesture(count: 2) { editingName = true }
                 }
                 if renamed {
                     Button { nameBinding.wrappedValue = node.name; editingName = false } label: {
                         Image(systemName: "arrow.uturn.backward").font(.system(size: 11)).frame(width: 20, height: 24)
                     }.buttonStyle(.plain).foregroundStyle(.secondary)
-                        .help("Вернуть исходное имя: \(node.name)").accessibilityLabel("Вернуть исходное имя \(node.name)")
+                        .help(L10n.format("Вернуть исходное имя: %@", node.name)).accessibilityLabel(L10n.format("Вернуть исходное имя %@", node.name))
                 }
                 if !editingName {
                     Button { editingName = true } label: {
                         Image(systemName: "pencil").font(.system(size: 11)).frame(width: 20, height: 24)
                     }.buttonStyle(.plain).foregroundStyle(.secondary)
-                        .help("Переименовать файл").accessibilityLabel("Переименовать \(node.name)")
+                        .help(L10n.text("Переименовать файл")).accessibilityLabel(L10n.format("Переименовать %@", node.name))
                 }
             }
         } else {
@@ -201,10 +204,11 @@ struct FileTreeRow: View {
         }
     }
     var body: some View {
+        let _ = locale
         VStack(spacing: 0) {
             HStack(spacing: 8) {
                 if node.children != nil {
-                    Button { expanded.toggle() } label: { Image(systemName: expanded ? "chevron.down" : "chevron.right").font(.system(size: 10, weight: .semibold)).frame(width: 14, height: 22) }.buttonStyle(.plain).accessibilityLabel(expanded ? "Свернуть \(node.name)" : "Развернуть \(node.name)")
+                    Button { expanded.toggle() } label: { Image(systemName: expanded ? "chevron.down" : "chevron.right").font(.system(size: 10, weight: .semibold)).frame(width: 14, height: 22) }.buttonStyle(.plain).accessibilityLabel(expanded ? L10n.format("Свернуть %@", node.name) : L10n.format("Развернуть %@", node.name))
                 } else { Color.clear.frame(width: 14, height: 1) }
                 MixedCheckbox(state: checkboxState, label: node.name) { chosen in
                     for index in node.indices { priorities[index] = chosen ? 4 : 0 }
@@ -229,6 +233,7 @@ struct FileTreeRow: View {
 /// A native field editor selects only the basename initially, leaving the extension intact.
 /// The extension remains editable when the user explicitly moves the selection into it.
 private struct RenameFileField: NSViewRepresentable {
+    @Environment(\.locale) private var locale
     @Environment(\.isEnabled) private var isEnabled
     @Binding var name: String
     let originalName: String
@@ -244,8 +249,8 @@ private struct RenameFileField: NSViewRepresentable {
         field.delegate = context.coordinator
         field.setContentHuggingPriority(.defaultLow, for: .horizontal)
         field.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        field.setAccessibilityLabel("Имя файла " + originalName)
-        field.toolTip = "Исходное имя: " + originalName
+        field.setAccessibilityLabel(L10n.format("Имя файла %@", originalName))
+        field.toolTip = L10n.format("Исходное имя: %@", originalName)
         DispatchQueue.main.async { [weak field] in
             guard let field, let window = field.window else { return }
             window.makeFirstResponder(field)
@@ -259,7 +264,10 @@ private struct RenameFileField: NSViewRepresentable {
         return field
     }
     func updateNSView(_ field: NSTextField, context: Context) {
+        let _ = locale
         field.isEnabled = isEnabled
+        field.setAccessibilityLabel(L10n.format("Имя файла %@", originalName))
+        field.toolTip = L10n.format("Исходное имя: %@", originalName)
         context.coordinator.parent = self
         if field.stringValue != name { field.stringValue = name }
     }
@@ -287,13 +295,15 @@ private struct RenameFileField: NSViewRepresentable {
 }
 
 struct MagnetView: View {
+    @Environment(\.locale) private var locale
     @ObservedObject var store: AppStore
     @ViewState private var value = ""
     var body: some View {
+        let _ = locale
         VStack(alignment: .leading, spacing: 20) {
-            PanelTitle(title: "Открыть magnet-ссылку", subtitle: "Сначала появится список файлов для выбора.")
+            PanelTitle(title: L10n.text("Открыть magnet-ссылку"), subtitle: L10n.text("Сначала появится список файлов для выбора."))
             TextField("magnet:?xt=urn:btih:…", text: $value).textFieldStyle(.roundedBorder).font(.system(size: 14)).onSubmit(submit)
-            HStack { Spacer(); Button("Отмена") { store.showMagnet = false }.keyboardShortcut(.cancelAction); Button("Продолжить", action: submit).buttonStyle(.glassProminent).disabled(!valid).keyboardShortcut(.defaultAction) }
+            HStack { Spacer(); Button(L10n.text("Отмена")) { store.showMagnet = false }.keyboardShortcut(.cancelAction); Button(L10n.text("Продолжить"), action: submit).buttonStyle(.glassProminent).disabled(!valid).keyboardShortcut(.defaultAction) }
         }.padding(26).frame(width: 580)
         .onAppear { if let text = NSPasteboard.general.string(forType: .string), text.hasPrefix("magnet:?") { value = text } }
     }
